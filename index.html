@@ -3,217 +3,264 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Coach Pro</title>
+    <title>Fitness Coach OS</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --bg: #000000; --card-bg: #1C1C1E; --accent: #0A84FF;
-            --success: #32D74B; --warmup: #FF9F0A; --text: #FFFFFF; --secondary: #8E8E93;
+            --bg: #000; --card: #1C1C1E; --accent: #0A84FF; --success: #32D74B; 
+            --warmup: #FF9F0A; --text: #FFF; --sec: #8E8E93; --border: #2C2C2E;
         }
-        body {
-            font-family: -apple-system, system-ui, sans-serif;
-            background-color: var(--bg); color: var(--text);
-            margin: 0; padding: 20px 16px env(safe-area-inset-bottom);
-        }
-        .header { margin-bottom: 25px; }
-        .date-label { color: var(--secondary); font-size: 13px; font-weight: 600; text-transform: uppercase; }
-        h1 { font-size: 32px; font-weight: 800; margin: 4px 0; }
-        .day-selector {
-            display: flex; background: #2C2C2E; padding: 2px; border-radius: 10px; margin-bottom: 25px;
-        }
-        .day-btn {
-            flex: 1; border: none; background: none; color: var(--secondary);
-            padding: 10px 0; font-weight: 600; border-radius: 8px;
-        }
-        .day-btn.active { background: #636366; color: white; }
-        .card {
-            background: var(--card-bg); border-radius: 16px; padding: 18px;
-            margin-bottom: 20px; border: 1px solid #2c2c2e;
-        }
-        .ss-header { display: flex; justify-content: space-between; margin-bottom: 15px; }
-        .ss-title { color: var(--accent); font-size: 12px; font-weight: 700; text-transform: uppercase; }
-        .set-badge { background: #3A3A3C; padding: 4px 10px; border-radius: 6px; font-size: 12px; color: var(--success); font-weight: 700; }
-        .ex-block { margin-bottom: 20px; }
-        .ex-name { font-size: 18px; font-weight: 600; }
-        .target-tag { font-size: 11px; padding: 2px 6px; border-radius: 4px; font-weight: 600; margin-right: 5px; }
-        .tag-warmup { background: rgba(255, 159, 10, 0.2); color: var(--warmup); }
-        .tag-work { background: rgba(50, 215, 75, 0.2); color: var(--success); }
-        .choice-grid { display: flex; gap: 10px; margin-top: 10px; }
-        .choice-btn {
-            flex: 1; background: #2C2C2E; border: 1px solid #3A3A3C; color: white;
-            padding: 12px 5px; border-radius: 12px; text-align: center;
-        }
-        .choice-btn.active { border-color: var(--accent); background: rgba(10, 132, 255, 0.1); }
-        .action-btn {
-            background: var(--accent); color: white; width: 100%; border: none;
-            padding: 16px; border-radius: 14px; font-size: 17px; font-weight: 600;
-        }
-        #timer {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none;
-            flex-direction: column; align-items: center; justify-content: center; z-index: 100;
-        }
-        .timer-circ { width: 180px; height: 180px; border: 3px solid var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 60px; margin-bottom: 20px; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px 16px 100px; }
+        
+        /* Typography */
+        .date-label { color: var(--sec); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        h1 { font-size: 28px; font-weight: 800; margin: 5px 0 20px; }
+
+        /* Day Tabs */
+        .tabs { display: flex; background: #2C2C2E; padding: 2px; border-radius: 12px; margin-bottom: 20px; }
+        .tab { flex: 1; border: none; background: none; color: var(--sec); padding: 12px 0; font-weight: 600; border-radius: 10px; position: relative; }
+        .tab.active { background: #636366; color: white; }
+        .tab.done::after { content: ''; position: absolute; top: 8px; right: 8px; width: 6px; height: 6px; background: var(--success); border-radius: 50%; }
+
+        /* Exercise Card */
+        .card { background: var(--card); border-radius: 20px; padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); }
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
+        .set-info { font-size: 12px; font-weight: 700; color: var(--success); background: #2C2C2E; padding: 4px 10px; border-radius: 8px; }
+        
+        .ex-row { margin-bottom: 15px; border-bottom: 1px solid #2C2C2E; padding-bottom: 15px; }
+        .ex-row:last-child { border: none; }
+        .ex-name { font-size: 17px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .ex-name span { color: var(--accent); font-size: 14px; cursor: pointer; } /* Кнопка графика */
+        
+        .target { font-size: 13px; color: var(--sec); margin: 4px 0 10px; }
+        .badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 800; text-transform: uppercase; }
+        .warm { background: rgba(255,159,10,0.15); color: var(--warmup); }
+        .work { background: rgba(10,132,255,0.15); color: var(--accent); }
+
+        /* Control Buttons */
+        .controls { display: flex; gap: 8px; }
+        .btn-w { flex: 1; background: #2C2C2E; border: 1px solid var(--border); border-radius: 12px; padding: 10px; color: white; text-align: center; }
+        .btn-w.active { border-color: var(--accent); background: rgba(10,132,255,0.1); }
+        .btn-w b { display: block; font-size: 16px; }
+        .btn-w i { font-size: 11px; color: var(--sec); font-style: normal; }
+        .btn-edit { width: 44px; background: #2C2C2E; border: 1px solid var(--border); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+
+        .main-btn { background: var(--accent); color: white; width: 100%; border: none; padding: 18px; border-radius: 16px; font-size: 17px; font-weight: 700; margin-top: 10px; }
+        
+        /* Modal & Timer */
+        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; display: none; flex-direction: column; padding: 40px 20px; }
+        .chart-container { background: var(--card); border-radius: 20px; padding: 15px; flex-grow: 1; }
+        
+        #timer-ui { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--accent); padding: 15px 30px; border-radius: 100px; display: none; align-items: center; gap: 15px; box-shadow: 0 10px 30px rgba(10,132,255,0.3); z-index: 999; }
+        #timer-ui span { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+        #timer-ui b { font-size: 14px; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
-<div id="timer">
-    <div class="timer-circ" id="t-val">90</div>
-    <div style="font-weight:600; color:var(--secondary)">REST TIME</div>
-    <button onclick="skipTimer()" style="background:none; border:none; color:var(--accent); margin-top:30px; font-size:16px;">SKIP</button>
+<div id="modal">
+    <h2 id="modal-title">Progress</h2>
+    <div class="chart-container"><canvas id="myChart"></canvas></div>
+    <button class="main-btn" onclick="closeModal()" style="margin-top: 20px;">BACK</button>
 </div>
 
-<div class="header">
-    <div class="date-label" id="current-date"></div>
-    <h1 id="day-title">Workout</h1>
+<div id="timer-ui" onclick="skipTimer()">
+    <b id="t-label">REST</b>
+    <span id="t-sec">90</span>
+    <b style="opacity: 0.7">SKIP</b>
 </div>
 
-<div class="day-selector">
-    <button class="day-btn active" id="btn-mon" onclick="renderDay('mon')">ПН</button>
-    <button class="day-btn" id="btn-tue" onclick="renderDay('tue')">ВТ</button>
-    <button class="day-btn" id="btn-thu" onclick="renderDay('thu')">ЧТ</button>
-    <button class="day-btn" id="btn-fri" onclick="renderDay('fri')">ПТ</button>
+<div class="date-label" id="date"></div>
+<h1 id="day-title">Workout</h1>
+
+<div class="tabs" id="day-tabs">
+    <button class="tab" id="t-mon" onclick="setDay('mon')">ПН</button>
+    <button class="tab" id="t-tue" onclick="setDay('tue')">ВТ</button>
+    <button class="tab" id="t-thu" onclick="setDay('thu')">ЧТ</button>
+    <button class="tab" id="t-fri" onclick="setDay('fri')">ПТ</button>
 </div>
 
-<div id="content"></div>
+<div id="exercises"></div>
+<button id="finish-btn" class="main-btn" style="background: var(--success); color: black; display: none;" onclick="finishDay()">COMPLETE WORKOUT</button>
 
 <script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
+const tg = window.Telegram.WebApp;
+tg.expand();
 
-    const workoutData = {
-        mon: { name: "Upper / Push-Pull", ss: [
-            { id: "mon_ss1", sets: 5, ex: [
-                { name: "Chest Press (Machine)", warm: {w:30, r:10}, work: {w:70, r:8} },
-                { name: "Lat Pulldown (Wide Grip)", warm: {w:40, r:10}, work: {w:70, r:8} }
-            ]},
-            { id: "mon_ss2", sets: 4, ex: [
-                { name: "Shoulder Press (Machine)", work: {w:60, r:8} },
-                { name: "Cable Row (Horizontal)", work: {w:80, r:8} }
-            ]},
-            { id: "mon_ss3", sets: 4, ex: [
-                { name: "Preacher Curl (Machine)", warm: {w:20, r:10}, work: {w:35, r:8} },
-                { name: "Tricep Kickback (Cable)", warm: {w:5, r:10}, work: {w:10, r:12} }
-            ]}
+// БАЗА ДАННЫХ С SMART REST
+const workoutData = {
+    mon: { name: "Push & Pull", rest: 90, ss: [
+        { id: "m1", sets: 5, rest: 120, ex: [
+            { name: "Chest Press (Machine)", warm: {w:30, r:10}, work: {w:70, r:8} },
+            { name: "Lat Pulldown (Wide)", warm: {w:40, r:10}, work: {w:70, r:8} }
         ]},
-        tue: { name: "Lower / Hypertrophy", ss: [
-            { id: "tue_ss1", sets: 4, ex: [
-                { name: "Leg Press (Machine)", warm: {w:80, r:10}, work: {w:140, r:10} },
-                { name: "Standing Leg Curl", work: {w:15, r:10} }
-            ]},
-            { id: "tue_ss2", sets: 3, ex: [
-                { name: "Hack Squat", work: {w:90, r:10} },
-                { name: "Leg Extension (Machine)", warm: {w:20, r:10}, work: {w:25, r:10} }
-            ]},
-            { id: "tue_ss3", sets: 3, ex: [
-                { name: "DB Hammer Curls", work: {w:12, r:10} },
-                { name: "Cable Tricep Pushdown", work: {w:22, r:10} }
-            ]}
-        ]},
-        thu: { name: "Upper / Incline Focus", ss: [
-            { id: "thu_ss1", sets: 4, ex: [
-                { name: "Incline DB Press (30°)", warm: {w:14, r:10}, work: {w:22, r:10} },
-                { name: "Lat Pulldown (Machine)", warm: {w:40, r:10}, work: {w:70, r:8} }
-            ]},
-            { id: "thu_ss2", sets: 4, ex: [
-                { name: "Chest Supported Row", work: {w:80, r:8} },
-                { name: "Lateral Raise (Dumbbell)", work: {w:8, r:15} }
-            ]},
-            { id: "thu_ss3", sets: 4, ex: [
-                { name: "Preacher Curl (Machine)", warm: {w:20, r:10}, work: {w:35, r:8} },
-                { name: "Tricep Kickback (Cable)", warm: {w:5, r:10}, work: {w:10, r:12} }
-            ]}
-        ]},
-        fri: { name: "Lower / Overhead Mix", ss: [
-            { id: "fri_ss1", sets: 4, ex: [
-                { name: "Leg Press (Machine)", warm: {w:80, r:10}, work: {w:140, r:10} },
-                { name: "Standing Leg Curl", work: {w:15, r:10} }
-            ]},
-            { id: "fri_ss2", sets: 3, ex: [
-                { name: "Hack Squat", work: {w:90, r:10} },
-                { name: "Leg Extension (Machine)", warm: {w:20, r:10}, work: {w:25, r:10} }
-            ]},
-            { id: "fri_ss3", sets: 3, ex: [
-                { name: "DB Hammer Curls", work: {w:12, r:10} },
-                { name: "Overhead Tricep Extension", work: {w:22, r:10} }
-            ]}
+        { id: "m2", sets: 4, rest: 90, ex: [
+            { name: "Shoulder Press", work: {w:60, r:8} },
+            { name: "Cable Row", work: {w:80, r:8} }
         ]}
-    };
+    ]},
+    tue: { name: "Legs & Core", rest: 120, ss: [
+        { id: "t1", sets: 4, rest: 150, ex: [
+            { name: "Leg Press", warm: {w:80, r:10}, work: {w:140, r:10} },
+            { name: "Leg Curl", work: {w:20, r:10} }
+        ]}
+    ]}
+    // Другие дни по аналогии...
+};
 
-    let state = JSON.parse(localStorage.getItem('workout_v3')) || {};
-    let selections = {};
+let db = JSON.parse(localStorage.getItem('fit_db_v5')) || {
+    history: {},      // { "Ex Name": [70, 72.5, 75] }
+    progress: {},     // { "ss_id": 1 }
+    doneDays: {}      // { "mon": true }
+};
 
-    function renderDay(dayId) {
-        document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('btn-' + dayId).classList.add('active');
-        const day = workoutData[dayId];
-        document.getElementById('day-title').innerText = day.name;
-        const container = document.getElementById('content');
-        container.innerHTML = '';
+let currentDay = 'mon';
+let selectedWeights = {};
+let timerId = null;
+let chartObj = null;
 
-        day.ss.forEach(ss => {
-            const currentSet = state[ss.id] || 1;
-            const isDone = currentSet > ss.sets;
-            const card = document.createElement('div');
-            card.className = 'card';
-            let html = `<div class="ss-header"><span class="ss-title">SUPERSET</span><span class="set-badge">${isDone ? 'DONE' : 'SET '+currentSet+'/'+ss.sets}</span></div>`;
+function save() { localStorage.setItem('fit_db_v5', JSON.stringify(db)); }
 
-            if (!isDone) {
-                ss.ex.forEach(ex => {
-                    const isWarm = currentSet === 1 && ex.warm;
-                    const target = isWarm ? ex.warm : ex.work;
-                    const history = JSON.parse(localStorage.getItem(ex.name) || "[]");
-                    const lastW = history.length > 0 ? history[history.length-1] : target.w;
-                    const selected = selections[ex.name] || lastW;
+function setDay(id) {
+    currentDay = id;
+    render();
+}
 
-                    html += `
-                        <div class="ex-block">
-                            <div class="ex-name">${ex.name}</div>
-                            <div style="margin-top:4px"><span class="target-tag ${isWarm?'tag-warmup':'tag-work'}">${isWarm?'WARMUP':'WORK'}</span><span style="color:var(--secondary);font-size:13px">Target: ${target.w}kg x ${target.r}</span></div>
-                            <div class="choice-grid">
-                                <div class="choice-btn ${selected==lastW?'active':''}" onclick="choose('${ex.name}', ${lastW})"><b>${lastW}kg</b><span>Keep</span></div>
-                                <div class="choice-btn ${selected==lastW+2.5?'active':''}" onclick="choose('${ex.name}', ${lastW+2.5})"><b>${lastW+2.5}kg</b><span>+2.5kg</span></div>
-                            </div>
+function render() {
+    const day = workoutData[currentDay];
+    document.getElementById('day-title').innerText = day.name;
+    
+    // Tabs state
+    document.querySelectorAll('.tab').forEach(t => {
+        const dId = t.id.replace('t-', '');
+        t.className = `tab ${dId === currentDay ? 'active' : ''} ${db.doneDays[dId] ? 'done' : ''}`;
+    });
+
+    const container = document.getElementById('exercises');
+    container.innerHTML = '';
+    let allDone = true;
+
+    day.ss.forEach(ss => {
+        const curSet = db.progress[ss.id] || 1;
+        const isSSDone = curSet > ss.sets;
+        if(!isSSDone) allDone = false;
+
+        const card = document.createElement('div');
+        card.className = 'card';
+        if(isSSDone) card.style.opacity = '0.3';
+
+        let html = `<div class="card-header"><span class="ss-title">SUPERSET</span><span class="set-info">${isSSDone ? 'DONE' : 'SET '+curSet+'/'+ss.sets}</span></div>`;
+
+        if(!isSSDone) {
+            ss.ex.forEach(ex => {
+                const isWarm = curSet === 1 && ex.warm;
+                const target = isWarm ? ex.warm : ex.work;
+                const hist = db.history[ex.name] || [];
+                const lastW = hist.length > 0 ? hist[hist.length-1] : target.w;
+                const activeW = selectedWeights[ex.name] || lastW;
+
+                html += `
+                    <div class="ex-row">
+                        <div class="ex-name">${ex.name} <span onclick="showChart('${ex.name}')">📈</span></div>
+                        <div class="target">
+                            <span class="badge ${isWarm?'warm':'work'}">${isWarm?'Warmup':'Work'}</span>
+                            Goal: ${target.w}kg x ${target.r}
                         </div>
-                    `;
-                });
-                html += `<button class="action-btn" onclick="saveSet('${ss.id}', '${dayId}')">COMPLETE SET</button>`;
-            } else {
-                html += `<div style="text-align:center; color:var(--secondary)">Excellent work!</div>`;
-            }
-            card.innerHTML = html;
-            container.appendChild(card);
-        });
-    }
+                        <div class="controls">
+                            <div class="btn-w ${activeW == lastW ? 'active' : ''}" onclick="pickW('${ex.name}', ${lastW})"><b>${lastW}kg</b><i>Keep</i></div>
+                            <div class="btn-w ${activeW == lastW + 2.5 ? 'active' : ''}" onclick="pickW('${ex.name}', ${lastW + 2.5})"><b>${lastW + 2.5}kg</b><i>+2.5</i></div>
+                            <div class="btn-edit" onclick="manualW('${ex.name}')">✎</div>
+                        </div>
+                    </div>
+                `;
+            });
+            html += `<button class="main-btn" onclick="doSet('${ss.id}', ${ss.rest})">COMPLETE SET</button>`;
+        } else {
+            html += `<div style="text-align:center; color:var(--success); font-weight:700">✓ Completed</div>`;
+        }
+        card.innerHTML = html;
+        container.appendChild(card);
+    });
 
-    function choose(ex, w) { selections[ex] = w; renderDay(document.querySelector('.day-btn.active').id.slice(4)); }
+    document.getElementById('finish-btn').style.display = (allDone && !db.doneDays[currentDay]) ? 'block' : 'none';
+}
 
-    function saveSet(ssId, dayId) {
-        const ss = workoutData[dayId].ss.find(s => s.id === ssId);
-        ss.ex.forEach(ex => {
-            const history = JSON.parse(localStorage.getItem(ex.name) || "[]");
-            history.push(selections[ex.name] || ex.work.w);
-            localStorage.setItem(ex.name, JSON.stringify(history));
-        });
-        state[ssId] = (state[ssId] || 1) + 1;
-        localStorage.setItem('workout_v3', JSON.stringify(state));
-        startTimer(90);
-        renderDay(dayId);
-    }
+function pickW(name, w) {
+    selectedWeights[name] = w;
+    tg.HapticFeedback.impactOccurred('light');
+    render();
+}
 
-    function startTimer(s) {
-        const t = document.getElementById('timer'); t.style.display = 'flex';
-        let left = s; document.getElementById('t-val').innerText = left;
-        const i = setInterval(() => {
-            left--; document.getElementById('t-val').innerText = left;
-            if (left <= 0) { clearInterval(i); t.style.display = 'none'; tg.HapticFeedback.notificationOccurred('success'); }
-        }, 1000);
-    }
+function manualW(name) {
+    const val = prompt("Enter weight (kg):", selectedWeights[name] || 0);
+    if(val) pickW(name, parseFloat(val));
+}
 
-    function skipTimer() { document.getElementById('timer').style.display = 'none'; }
+function doSet(id, restTime) {
+    const ss = workoutData[currentDay].ss.find(s => s.id === id);
+    ss.ex.forEach(ex => {
+        const w = selectedWeights[ex.name] || (db.history[ex.name]?.slice(-1)[0] || ex.work.w);
+        if(!db.history[ex.name]) db.history[ex.name] = [];
+        db.history[ex.name].push(w);
+    });
+    db.progress[id] = (db.progress[id] || 1) + 1;
+    save();
+    startTimer(restTime);
+    render();
+}
 
-    document.getElementById('current-date').innerText = new Date().toLocaleDateString('ru-RU', {weekday:'long', day:'numeric', month:'long'}).toUpperCase();
-    renderDay('mon');
+function startTimer(sec) {
+    clearInterval(timerId);
+    const ui = document.getElementById('timer-ui');
+    const display = document.getElementById('t-sec');
+    ui.style.display = 'flex';
+    let left = sec;
+    display.innerText = left;
+    
+    timerId = setInterval(() => {
+        left--;
+        display.innerText = left;
+        if(left <= 0) skipTimer();
+    }, 1000);
+}
+
+function skipTimer() {
+    clearInterval(timerId);
+    document.getElementById('timer-ui').style.display = 'none';
+    tg.HapticFeedback.notificationOccurred('success');
+}
+
+function showChart(name) {
+    const hist = db.history[name] || [];
+    if(hist.length < 2) { alert("Need at least 2 sessions for chart!"); return; }
+    
+    document.getElementById('modal').style.display = 'flex';
+    document.getElementById('modal-title').innerText = name;
+    
+    if(chartObj) chartObj.destroy();
+    const ctx = document.getElementById('myChart').getContext('2d');
+    chartObj = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: hist.map((_,i) => i+1),
+            datasets: [{ label: 'Weight (kg)', data: hist, borderColor: '#0A84FF', tension: 0.4, fill: true, backgroundColor: 'rgba(10,132,255,0.1)' }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { grid: { color: '#2C2C2E' } }, x: { display: false } } }
+    });
+}
+
+function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+function finishDay() {
+    db.doneDays[currentDay] = true;
+    save();
+    tg.HapticFeedback.notificationOccurred('success');
+    render();
+}
+
+document.getElementById('date').innerText = new Date().toLocaleDateString('ru-RU', {weekday:'long', day:'numeric', month:'long'}).toUpperCase();
+render();
 </script>
 </body>
 </html>
