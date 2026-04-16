@@ -61,7 +61,15 @@
 </div>
 
 <div class="date-label" id="date"></div>
-<h1 id="day-title">Workout</h1>
+<div class="header" style="display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <div class="date-label" id="date"></div>
+        <h1 id="day-title" style="margin: 0;">Workout</h1>
+    </div>
+    <button onclick="startNewWeek()" style="background: #2C2C2E; color: var(--accent); border: none; padding: 8px 12px; border-radius: 10px; font-size: 12px; font-weight: 700;">
+        NEW WEEK
+    </button>
+</div>
 
 <div class="tabs">
     <button class="tab" id="t-mon" onclick="setDay('mon')">ПН</button>
@@ -278,6 +286,28 @@ function finishDay() {
 
 document.getElementById('date').innerText = new Date().toLocaleDateString('ru-RU', {weekday:'long', day:'numeric', month:'long'}).toUpperCase();
 render();
+    // Функция для начала новой недели
+function startNewWeek() {
+    // Подтверждение, чтобы не сбросить случайно посреди тренировки
+    if (confirm("Начать новую неделю? Прогресс подходов будет сброшен, но история весов сохранится.")) {
+        
+        // Обнуляем только текущий прогресс и выполненные дни
+        db.progress = {};
+        db.doneDays = {};
+        
+        // Сохраняем обновленную базу (история весов в db.history остается!)
+        save();
+        
+        // Сбрасываем выбранные веса для чистого начала
+        selectedWeights = {};
+        
+        // Перерисовываем интерфейс
+        render();
+        
+        // Виброотклик от Telegram
+        tg.HapticFeedback.notificationOccurred('success');
+    }
+}
 </script>
 </body>
 </html>
