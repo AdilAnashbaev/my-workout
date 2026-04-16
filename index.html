@@ -174,22 +174,33 @@ body{padding:0 0 160px}
 <div id="main-content"></div>
 
 <script>
-  
-const tg = window.Telegram.WebApp;
+    const tg = window.Telegram.WebApp;
 
-// Разворачиваем на максимально возможную высоту (Fullsize)
-tg.expand(); 
+// 1. Сразу расширяем до максимума (Fullsize) - это работает всегда
+tg.expand();
 
-// Запрашиваем настоящий Fullscreen (без статус-бара)
-if (tg.requestFullscreen) {
-    tg.requestFullscreen();
-}
-
-// Дополнительно: подтверждение закрытия (чтобы случайно не свайпнуть в зале)
+// 2. Включаем защиту от случайного закрытия (очень важно для зала!)
 tg.enableClosingConfirmation();
 
-// Устанавливаем цвет статус-бара в цвет фона приложения
+// 3. Красим шапку в черный, чтобы она слилась с фоном
 tg.setHeaderColor('#000000');
+
+// 4. ФУНКЦИЯ ДЛЯ НАСТОЯЩЕГО FULLSCREEN
+function enterFullscreen() {
+    if (tg.isVersionAtLeast('7.0')) { // Проверяем версию
+        if (tg.requestFullscreen) {
+            tg.requestFullscreen();
+        }
+    } else {
+        console.log("Версия Telegram не поддерживает Fullscreen");
+    }
+}
+
+// 5. Трюк: вызываем Fullscreen при первом клике на любую вкладку дня
+// так как браузеры требуют "жеста пользователя"
+document.addEventListener('click', function() {
+    enterFullscreen();
+}, { once: true }); // Выполнится только один раз при первом клике
 const WORKOUTS = {
   mon:{ name:"Push / Pull", ss:[
     {id:"m1",sets:5,rest:120,ex:[{name:"Chest Press",w:70,reps:10},{name:"Lat Pulldown",w:70,reps:10}]},
