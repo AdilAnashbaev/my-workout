@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Coach Pro</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg: #000000; --card-bg: #1C1C1E; --accent: #0A84FF;
+            --success: #32D74B; --warmup: #FF9F0A; --text: #FFFFFF; --secondary: #8E8E93;
+        }
+        body {
+            font-family: -apple-system, system-ui, sans-serif;
+            background-color: var(--bg); color: var(--text);
+            margin: 0; padding: 20px 16px env(safe-area-inset-bottom);
+        }
+        .header { margin-bottom: 25px; }
+        .date-label { color: var(--secondary); font-size: 13px; font-weight: 600; text-transform: uppercase; }
+        h1 { font-size: 32px; font-weight: 800; margin: 4px 0; }
+        .day-selector {
+            display: flex; background: #2C2C2E; padding: 2px; border-radius: 10px; margin-bottom: 25px;
+        }
+        .day-btn {
+            flex: 1; border: none; background: none; color: var(--secondary);
+            padding: 10px 0; font-weight: 600; border-radius: 8px;
+        }
+        .day-btn.active { background: #636366; color: white; }
+        .card {
+            background: var(--card-bg); border-radius: 16px; padding: 18px;
+            margin-bottom: 20px; border: 1px solid #2c2c2e;
+        }
+        .ss-header { display: flex; justify-content: space-between; margin-bottom: 15px; }
+        .ss-title { color: var(--accent); font-size: 12px; font-weight: 700; text-transform: uppercase; }
+        .set-badge { background: #3A3A3C; padding: 4px 10px; border-radius: 6px; font-size: 12px; color: var(--success); font-weight: 700; }
+        .ex-block { margin-bottom: 20px; }
+        .ex-name { font-size: 18px; font-weight: 600; }
+        .target-tag { font-size: 11px; padding: 2px 6px; border-radius: 4px; font-weight: 600; margin-right: 5px; }
+        .tag-warmup { background: rgba(255, 159, 10, 0.2); color: var(--warmup); }
+        .tag-work { background: rgba(50, 215, 75, 0.2); color: var(--success); }
+        .choice-grid { display: flex; gap: 10px; margin-top: 10px; }
+        .choice-btn {
+            flex: 1; background: #2C2C2E; border: 1px solid #3A3A3C; color: white;
+            padding: 12px 5px; border-radius: 12px; text-align: center;
+        }
+        .choice-btn.active { border-color: var(--accent); background: rgba(10, 132, 255, 0.1); }
+        .action-btn {
+            background: var(--accent); color: white; width: 100%; border: none;
+            padding: 16px; border-radius: 14px; font-size: 17px; font-weight: 600;
+        }
+        #timer {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none;
+            flex-direction: column; align-items: center; justify-content: center; z-index: 100;
+        }
+        .timer-circ { width: 180px; height: 180px; border: 3px solid var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 60px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+<div id="timer">
+    <div class="timer-circ" id="t-val">90</div>
+    <div style="font-weight:600; color:var(--secondary)">REST TIME</div>
+    <button onclick="skipTimer()" style="background:none; border:none; color:var(--accent); margin-top:30px; font-size:16px;">SKIP</button>
+</div>
+
+<div class="header">
+    <div class="date-label" id="current-date"></div>
+    <h1 id="day-title">Workout</h1>
+</div>
+
+<div class="day-selector">
+    <button class="day-btn active" id="btn-mon" onclick="renderDay('mon')">ПН</button>
+    <button class="day-btn" id="btn-tue" onclick="renderDay('tue')">ВТ</button>
+    <button class="day-btn" id="btn-thu" onclick="renderDay('thu')">ЧТ</button>
+    <button class="day-btn" id="btn-fri" onclick="renderDay('fri')">ПТ</button>
+</div>
+
+<div id="content"></div>
+
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    const workoutData = {
+        mon: { name: "Upper / Push-Pull", ss: [
+            { id: "mon_ss1", sets: 5, ex: [
+                { name: "Chest Press (Machine)", warm: {w:30, r:10}, work: {w:70, r:8} },
+                { name: "Lat Pulldown (Wide Grip)", warm: {w:40, r:10}, work: {w:70, r:8} }
+            ]},
+            { id: "mon_ss2", sets: 4, ex: [
+                { name: "Shoulder Press (Machine)", work: {w:60, r:8} },
+                { name: "Cable Row (Horizontal)", work: {w:80, r:8} }
+            ]},
+            { id: "mon_ss3", sets: 4, ex: [
+                { name: "Preacher Curl (Machine)", warm: {w:20, r:10}, work: {w:35, r:8} },
+                { name: "Tricep Kickback (Cable)", warm: {w:5, r:10}, work: {w:10, r:12} }
+            ]}
+        ]},
+        tue: { name: "Lower / Hypertrophy", ss: [
+            { id: "tue_ss1", sets: 4, ex: [
+                { name: "Leg Press (Machine)", warm: {w:80, r:10}, work: {w:140, r:10} },
+                { name: "Standing Leg Curl", work: {w:15, r:10} }
+            ]},
+            { id: "tue_ss2", sets: 3, ex: [
+                { name: "Hack Squat", work: {w:90, r:10} },
+                { name: "Leg Extension (Machine)", warm: {w:20, r:10}, work: {w:25, r:10} }
+            ]},
+            { id: "tue_ss3", sets: 3, ex: [
+                { name: "DB Hammer Curls", work: {w:12, r:10} },
+                { name: "Cable Tricep Pushdown", work: {w:22, r:10} }
+            ]}
+        ]},
+        thu: { name: "Upper / Incline Focus", ss: [
+            { id: "thu_ss1", sets: 4, ex: [
+                { name: "Incline DB Press (30°)", warm: {w:14, r:10}, work: {w:22, r:10} },
+                { name: "Lat Pulldown (Machine)", warm: {w:40, r:10}, work: {w:70, r:8} }
+            ]},
+            { id: "thu_ss2", sets: 4, ex: [
+                { name: "Chest Supported Row", work: {w:80, r:8} },
+                { name: "Lateral Raise (Dumbbell)", work: {w:8, r:15} }
+            ]},
+            { id: "thu_ss3", sets: 4, ex: [
+                { name: "Preacher Curl (Machine)", warm: {w:20, r:10}, work: {w:35, r:8} },
+                { name: "Tricep Kickback (Cable)", warm: {w:5, r:10}, work: {w:10, r:12} }
+            ]}
+        ]},
+        fri: { name: "Lower / Overhead Mix", ss: [
+            { id: "fri_ss1", sets: 4, ex: [
+                { name: "Leg Press (Machine)", warm: {w:80, r:10}, work: {w:140, r:10} },
+                { name: "Standing Leg Curl", work: {w:15, r:10} }
+            ]},
+            { id: "fri_ss2", sets: 3, ex: [
+                { name: "Hack Squat", work: {w:90, r:10} },
+                { name: "Leg Extension (Machine)", warm: {w:20, r:10}, work: {w:25, r:10} }
+            ]},
+            { id: "fri_ss3", sets: 3, ex: [
+                { name: "DB Hammer Curls", work: {w:12, r:10} },
+                { name: "Overhead Tricep Extension", work: {w:22, r:10} }
+            ]}
+        ]}
+    };
+
+    let state = JSON.parse(localStorage.getItem('workout_v3')) || {};
+    let selections = {};
+
+    function renderDay(dayId) {
+        document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('btn-' + dayId).classList.add('active');
+        const day = workoutData[dayId];
+        document.getElementById('day-title').innerText = day.name;
+        const container = document.getElementById('content');
+        container.innerHTML = '';
+
+        day.ss.forEach(ss => {
+            const currentSet = state[ss.id] || 1;
+            const isDone = currentSet > ss.sets;
+            const card = document.createElement('div');
+            card.className = 'card';
+            let html = `<div class="ss-header"><span class="ss-title">SUPERSET</span><span class="set-badge">${isDone ? 'DONE' : 'SET '+currentSet+'/'+ss.sets}</span></div>`;
+
+            if (!isDone) {
+                ss.ex.forEach(ex => {
+                    const isWarm = currentSet === 1 && ex.warm;
+                    const target = isWarm ? ex.warm : ex.work;
+                    const history = JSON.parse(localStorage.getItem(ex.name) || "[]");
+                    const lastW = history.length > 0 ? history[history.length-1] : target.w;
+                    const selected = selections[ex.name] || lastW;
+
+                    html += `
+                        <div class="ex-block">
+                            <div class="ex-name">${ex.name}</div>
+                            <div style="margin-top:4px"><span class="target-tag ${isWarm?'tag-warmup':'tag-work'}">${isWarm?'WARMUP':'WORK'}</span><span style="color:var(--secondary);font-size:13px">Target: ${target.w}kg x ${target.r}</span></div>
+                            <div class="choice-grid">
+                                <div class="choice-btn ${selected==lastW?'active':''}" onclick="choose('${ex.name}', ${lastW})"><b>${lastW}kg</b><span>Keep</span></div>
+                                <div class="choice-btn ${selected==lastW+2.5?'active':''}" onclick="choose('${ex.name}', ${lastW+2.5})"><b>${lastW+2.5}kg</b><span>+2.5kg</span></div>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += `<button class="action-btn" onclick="saveSet('${ss.id}', '${dayId}')">COMPLETE SET</button>`;
+            } else {
+                html += `<div style="text-align:center; color:var(--secondary)">Excellent work!</div>`;
+            }
+            card.innerHTML = html;
+            container.appendChild(card);
+        });
+    }
+
+    function choose(ex, w) { selections[ex] = w; renderDay(document.querySelector('.day-btn.active').id.slice(4)); }
+
+    function saveSet(ssId, dayId) {
+        const ss = workoutData[dayId].ss.find(s => s.id === ssId);
+        ss.ex.forEach(ex => {
+            const history = JSON.parse(localStorage.getItem(ex.name) || "[]");
+            history.push(selections[ex.name] || ex.work.w);
+            localStorage.setItem(ex.name, JSON.stringify(history));
+        });
+        state[ssId] = (state[ssId] || 1) + 1;
+        localStorage.setItem('workout_v3', JSON.stringify(state));
+        startTimer(90);
+        renderDay(dayId);
+    }
+
+    function startTimer(s) {
+        const t = document.getElementById('timer'); t.style.display = 'flex';
+        let left = s; document.getElementById('t-val').innerText = left;
+        const i = setInterval(() => {
+            left--; document.getElementById('t-val').innerText = left;
+            if (left <= 0) { clearInterval(i); t.style.display = 'none'; tg.HapticFeedback.notificationOccurred('success'); }
+        }, 1000);
+    }
+
+    function skipTimer() { document.getElementById('timer').style.display = 'none'; }
+
+    document.getElementById('current-date').innerText = new Date().toLocaleDateString('ru-RU', {weekday:'long', day:'numeric', month:'long'}).toUpperCase();
+    renderDay('mon');
+</script>
+</body>
+</html>
