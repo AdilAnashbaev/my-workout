@@ -174,9 +174,22 @@ body{padding:0 0 160px}
 <div id="main-content"></div>
 
 <script>
-const tg = window.Telegram?.WebApp;
-if (tg) { tg.expand(); try { tg.setHeaderColor('#000000'); } catch(e){} }
+  
+const tg = window.Telegram.WebApp;
 
+// Разворачиваем на максимально возможную высоту (Fullsize)
+tg.expand(); 
+
+// Запрашиваем настоящий Fullscreen (без статус-бара)
+if (tg.requestFullscreen) {
+    tg.requestFullscreen();
+}
+
+// Дополнительно: подтверждение закрытия (чтобы случайно не свайпнуть в зале)
+tg.enableClosingConfirmation();
+
+// Устанавливаем цвет статус-бара в цвет фона приложения
+tg.setHeaderColor('#000000');
 const WORKOUTS = {
   mon:{ name:"Push / Pull", ss:[
     {id:"m1",sets:5,rest:120,ex:[{name:"Chest Press",w:70,reps:10},{name:"Lat Pulldown",w:70,reps:10}]},
