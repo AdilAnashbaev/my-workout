@@ -9,7 +9,7 @@
 <style>
 :root {
   --bg:#000; --card:#1C1C1E; --sep:#2C2C2E; --border:#3A3A3C;
-  --accent:#0A84FF; --success:#32D74B; --warn:#FF9F0A;
+  --accent:#0A84FF; --success:#32D74B; --warn:#FF9F0A; --error:#FF453A;
   --text:#FFF; --sec:#8E8E93;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -22,7 +22,7 @@ body{padding:0 0 160px}
 .top-title{font-size:26px;font-weight:700;letter-spacing:-.5px}
 .week-badge{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:13px;font-weight:600;color:var(--sec);align-self:center}
 
-/* ── PROGRESS BAR TABS ── */
+/* ���─ PROGRESS BAR TABS ── */
 .prog-wrap{padding:14px 16px 0}
 .prog-track{
   display:flex;height:44px;border-radius:14px;overflow:hidden;
@@ -36,11 +36,8 @@ body{padding:0 0 160px}
   position:relative;z-index:1;
   letter-spacing:.3px;
 }
-/* green fill slides from left — done segments */
 .prog-seg.done{color:#000}
-/* active (not done) highlight */
 .prog-seg.active:not(.done){color:#fff}
-/* the green fill bar underneath */
 .prog-fill{
   position:absolute;top:0;left:0;height:100%;
   background:var(--success);
@@ -49,13 +46,11 @@ body{padding:0 0 160px}
   z-index:0;
   pointer-events:none;
 }
-/* active indicator line at bottom */
 .prog-seg.active::after{
   content:'';position:absolute;bottom:0;left:10%;right:10%;height:2px;
   background:#fff;border-radius:2px 2px 0 0;opacity:.5;
 }
 .prog-seg.done.active::after{background:#000;opacity:.3}
-/* dividers between segments — only between non-done pairs */
 .prog-seg+.prog-seg{border-left:1px solid var(--border)}
 .prog-seg.done+.prog-seg.done{border-left-color:rgba(0,0,0,.15)}
 
@@ -82,7 +77,7 @@ body{padding:0 0 160px}
 .btn-adj{flex:1;background:var(--sep);border:none;border-radius:12px;padding:11px 5px;color:var(--text);font-size:14px;font-weight:700;cursor:pointer;transition:all .15s}
 .btn-adj:active{transform:scale(.95);opacity:.7}
 .btn-adj.minus{color:var(--sec)}
-.btn-edit{width:44px;height:44px;background:var(--sep);border:none;border-radius:12px;color:var(--sec);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.btn-edit{width:44px;height:44px;background:var(--sep);border:none;border-radius:12px;color:var(--sec);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
 .btn-edit:active{transform:scale(.95)}
 
 /* SET BUTTON */
@@ -98,7 +93,7 @@ body{padding:0 0 160px}
 .finish-btn:active{transform:scale(.98)}
 
 /* TIMER PILL */
-.timer-pill{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 24px);left:50%;transform:translateX(-50%);background:#1C1C1E;border:1px solid var(--border);border-radius:100px;display:none;align-items:stretch;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,0.4)}
+.timer-pill{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 24px);left:50%;transform:translateX(-50%);background:#1C1C1E;border:1px solid var(--border);border-radius:100px;display:none;align-items:center;gap:8px;z-index:99;box-shadow:0 8px 32px rgba(0,0,0,.5)}
 .timer-left{padding:12px 18px;flex:1}
 .timer-label{font-size:10px;font-weight:700;color:var(--sec);text-transform:uppercase;letter-spacing:.8px}
 .timer-count{font-size:22px;font-weight:800;color:var(--text);display:block}
@@ -112,6 +107,31 @@ body{padding:0 0 160px}
 .stat-card{background:var(--card);border-radius:16px;padding:16px;border:1px solid var(--sep)}
 .stat-num{font-size:26px;font-weight:800;color:var(--success);letter-spacing:-1px}
 .stat-lbl{font-size:11px;color:var(--sec);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+
+/* WEEK STATS WIDGET */
+.week-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
+.week-stat-item{background:var(--card);border-radius:16px;padding:14px;border:1px solid var(--sep);text-align:center}
+.week-stat-value{font-size:22px;font-weight:800;color:var(--accent);margin-bottom:4px}
+.week-stat-label{font-size:10px;color:var(--sec);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+
+/* EXERCISE RANKING */
+.exercise-ranking{background:var(--card);border-radius:20px;padding:16px;margin:16px 0;border:1px solid var(--sep)}
+.rank-item{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--sep);font-size:14px}
+.rank-item:last-child{border-bottom:none}
+.rank-name{flex:1;font-weight:600}
+.rank-change{font-weight:700;font-size:13px;padding:4px 10px;border-radius:6px}
+.rank-change.up{background:rgba(50,215,75,.2);color:var(--success)}
+.rank-change.down{background:rgba(255,69,58,.2);color:var(--error)}
+
+/* PR NOTIFICATION */
+.pr-notification{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--card);border-radius:24px;padding:32px 24px;text-align:center;z-index:999;border:2px solid var(--success);display:none;animation:popIn .4s cubic-bezier(.34,1.56,.64,1)}
+.pr-notification.show{display:block}
+.pr-icon{font-size:64px;margin-bottom:16px;animation:bounce .6s ease-in-out infinite}
+.pr-title{font-size:24px;font-weight:800;color:var(--success);margin-bottom:8px}
+.pr-text{font-size:14px;color:var(--sec);margin-bottom:4px}
+.pr-value{font-size:28px;font-weight:800;color:var(--success)}
+@keyframes popIn{0%{transform:translate(-50%,-50%) scale(.3);opacity:0}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
+@keyframes bounce{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
 
 /* CHART CARDS */
 .chart-card{background:var(--card);border-radius:20px;padding:16px;margin-bottom:12px;border:1px solid var(--sep)}
@@ -132,12 +152,24 @@ body{padding:0 0 160px}
 .week-end-sub{font-size:15px;color:var(--sec);margin-bottom:20px}
 
 /* UNDO TOAST */
-.undo-toast{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 90px);left:16px;right:16px;background:#3A3A3C;border-radius:14px;padding:13px 16px;display:none;align-items:center;justify-content:space-between;z-index:998}
+.undo-toast{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 90px);left:16px;right:16px;background:#3A3A3C;border-radius:14px;padding:13px 16px;display:none;align-items:center;justify-content:space-between;gap:8px;z-index:98}
 .undo-text{font-size:14px;font-weight:500}
-.undo-btn{background:transparent;border:none;color:var(--accent);font-size:14px;font-weight:700;cursor:pointer;padding:0}
+.undo-btn{background:transparent;border:none;color:var(--accent);font-size:14px;font-weight:700;cursor:pointer;padding:0;white-space:nowrap}
+
+/* OVERLAY */
+.overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);display:none;z-index:997}
 </style>
 </head>
 <body>
+
+<div class="overlay" id="overlay"></div>
+
+<div class="pr-notification" id="pr-notification">
+  <div class="pr-icon">🔥</div>
+  <div class="pr-title">НОВЫЙ РЕКОРД!</div>
+  <div class="pr-text" id="pr-exercise"></div>
+  <div class="pr-value" id="pr-weight"></div>
+</div>
 
 <div class="timer-pill" id="timer-pill">
   <div class="timer-left">
@@ -174,33 +206,19 @@ body{padding:0 0 160px}
 <div id="main-content"></div>
 
 <script>
-    const tg = window.Telegram.WebApp;
-
-// 1. Сразу расширяем до максимума (Fullsize) - это работает всегда
+const tg = window.Telegram.WebApp;
 tg.expand();
-
-// 2. Включаем защиту от случайного закрытия (очень важно для зала!)
 tg.enableClosingConfirmation();
-
-// 3. Красим шапку в черный, чтобы она слилась с фоном
 tg.setHeaderColor('#000000');
 
-// 4. ФУНКЦИЯ ДЛЯ НАСТОЯЩЕГО FULLSCREEN
 function enterFullscreen() {
-    if (tg.isVersionAtLeast('7.0')) { // Проверяем версию
-        if (tg.requestFullscreen) {
-            tg.requestFullscreen();
-        }
-    } else {
-        console.log("Версия Telegram не поддерживает Fullscreen");
+    if (tg.isVersionAtLeast('7.0')) {
+        if (tg.requestFullscreen) tg.requestFullscreen();
     }
 }
 
-// 5. Трюк: вызываем Fullscreen при первом клике на любую вкладку дня
-// так как браузеры требуют "жеста пользователя"
-document.addEventListener('click', function() {
-    enterFullscreen();
-}, { once: true }); // Выполнится только один раз при первом клике
+document.addEventListener('click', enterFullscreen, { once: true });
+
 const WORKOUTS = {
   mon:{ name:"Push / Pull", ss:[
     {id:"m1",sets:5,rest:120,ex:[{name:"Chest Press",w:70,reps:10},{name:"Lat Pulldown",w:70,reps:10}]},
@@ -227,30 +245,52 @@ const WORKOUTS = {
 const DAY_ORDER = ['mon','tue','thu','fri'];
 const DAY_NAMES = {mon:'Понедельник',tue:'Вторник',thu:'Четверг',fri:'Пятница'};
 
-function loadDB(){try{return JSON.parse(localStorage.getItem('fit_v9'))||{};}catch(e){return {};}}
-function saveDB(){localStorage.setItem('fit_v9',JSON.stringify(db));}
+function loadDB(){try{return JSON.parse(localStorage.getItem('fit_v10'))||{};}catch(e){return {};}}
+function saveDB(){localStorage.setItem('fit_v10',JSON.stringify(db));}
 
 let db = loadDB();
-if(!db.progress)  db.progress={};
-if(!db.doneDays)  db.doneDays={};
-if(!db.weights)   db.weights={};
-if(!db.weekVol)   db.weekVol={};
-if(!db.prevWeights) db.prevWeights={};
-if(!db.weekNum)     db.weekNum=1;
+if(!db.progress)      db.progress={};
+if(!db.doneDays)      db.doneDays={};
+if(!db.weights)       db.weights={};
+if(!db.weekVol)       db.weekVol={};
+if(!db.prevWeights)   db.prevWeights={};
+if(!db.weekHistory)   db.weekHistory=[];
+if(!db.weekNum)       db.weekNum=1;
+if(!db.personalRecords) db.personalRecords={};
+if(!db.baseWeights)   db.baseWeights=initBaseWeights();
 
-// ИСПРАВЛЕНИЕ 1: всегда начинаем с понедельника (вместо автоматического дня)
+function initBaseWeights() {
+  const base = {};
+  DAY_ORDER.forEach(day => {
+    WORKOUTS[day].ss.forEach(ss => {
+      ss.ex.forEach(ex => {
+        base[ex.name] = ex.w;
+      });
+    });
+  });
+  return base;
+}
+
 let currentDay = 'mon';
-
 let timerInterval=null, timerLeft=0, undoTimeout=null, lastSetSnapshot=null;
 let chartInstances={};
 
-function getWeight(name,def){return db.weights[name]!==undefined?db.weights[name]:def;}
-function setWeight(name,w){db.weights[name]=Math.max(0,w);saveDB();}
+function getWeight(name,def){
+  const key = currentDay + '_' + name;
+  if(db.weights[key]!==undefined) return db.weights[key];
+  return db.weights[name]!==undefined ? db.weights[name] : def;
+}
+
+function setWeight(name,w){
+  const key = currentDay + '_' + name;
+  db.weights[key] = Math.max(0, w);
+  saveDB();
+}
+
 function getCurSet(id){return db.progress[id]||1;}
 
 function switchDay(id){
   currentDay=id;
-  // ИСПРАВЛЕНИЕ 2: скролл наверх при смене дня
   window.scrollTo(0, 0);
   render();
 }
@@ -258,7 +298,7 @@ function switchDay(id){
 /* ── PROGRESS BAR ── */
 function renderTabs(){
   const doneCount = DAY_ORDER.filter(d=>db.doneDays[d]).length;
-  document.getElementById('week-badge').innerText=`${doneCount}/4 готово`;
+  document.getElementById('week-badge').innerText=`${doneCount}/4`;
 
   let lastDoneIdx = -1;
   DAY_ORDER.forEach((d,i)=>{ if(db.doneDays[d]) lastDoneIdx=i; });
@@ -320,23 +360,22 @@ function renderSS(container,ss,curSet,isDone){
   if(!isDone){
     ss.ex.forEach(ex=>{
       const w=getWeight(ex.name,ex.w);
-      const safeId=ex.name.replace(/[^a-zA-Z0-9]/g,'_');
       html+=`
         <div class="ex-row">
           <div class="ex-name">${ex.name}</div>
           <div class="ex-controls">
-            <button class="btn-adj minus" onclick="adjustW('${ex.name}',${ex.w},-2.5)">−2.5</button>
+            <button class="btn-adj minus" onclick="adjustW('${ex.name.replace(/'/g,"\\'")}',-2.5)">−2.5</button>
             <div class="weight-display">
               <span class="weight-val">${w}</span>
               <span class="weight-unit">${ex.reps} повт × кг</span>
             </div>
-            <button class="btn-adj" onclick="adjustW('${ex.name}',${ex.w},2.5)">+2.5</button>
-            <button class="btn-edit" onclick="editW('${ex.name}',${ex.w})">✎</button>
+            <button class="btn-adj" onclick="adjustW('${ex.name.replace(/'/g,"\\'")}',.+2.5)">+2.5</button>
+            <button class="btn-edit" onclick="editW('${ex.name.replace(/'/g,"\\'")}',${ ex.w})">✎</button>
           </div>
         </div>`;
     });
     const isLast=curSet===ss.sets;
-    html+=`<div class="set-btn-wrap"><button class="set-btn ${isLast?'last-set':'ready'}" onclick="logSet('${ss.id}',${ss.rest})">${isLast?'Последний подход — завершить':'Подход выполнен'}</button></div>`;
+    html+=`<div class="set-btn-wrap"><button class="set-btn ${isLast?'last-set':'ready'}" onclick="logSet('${ss.id}',${ss.rest})">${isLast?'Последний подход — завершить':'Записать подход'}</button></div>`;
   } else {
     html+=`<div style="padding:14px 16px;color:var(--success);font-size:14px;font-weight:600;text-align:center">Суперсет завершён</div>`;
   }
@@ -344,10 +383,10 @@ function renderSS(container,ss,curSet,isDone){
   container.appendChild(card);
 }
 
-/* ── REPORT with CHARTS ── */
+/* ─�� REPORT with CHARTS + NEW FEATURES ── */
 function renderReport(container){
   const vol=db.weekVol[currentDay]||0;
-  const kcal=Math.floor(vol*0.04+120);
+  const kcal=Math.floor(vol*0.05+150);
   const idx=DAY_ORDER.indexOf(currentDay);
   const allWeekDone=DAY_ORDER.every(d=>db.doneDays[d]);
 
@@ -360,11 +399,40 @@ function renderReport(container){
       <div class="stat-card"><div class="stat-num">${vol.toLocaleString()}</div><div class="stat-lbl">Объём, кг</div></div>
       <div class="stat-card"><div class="stat-num">${kcal}</div><div class="stat-lbl">Калории</div></div>
     </div>
-    <div class="section-label" style="padding-left:0">Веса по упражнениям</div>
   `;
 
+  /* ФИЧА 4: ВИДЖЕТ СТАТИСТИКИ НЕДЕЛИ */
+  if(allWeekDone) {
+    const weekVol = Object.values(db.weekVol).reduce((a,b)=>a+b,0);
+    const weekKcal = Math.floor(weekVol*0.05+600);
+    const bestDay = Object.keys(db.weekVol).reduce((a,b)=>db.weekVol[b]>db.weekVol[a]?b:a,'mon');
+    html+=`
+      <div class="section-label" style="padding-left:0">Статистика недели</div>
+      <div class="week-stats">
+        <div class="week-stat-item">
+          <div class="week-stat-value">${weekVol.toLocaleString()}</div>
+          <div class="week-stat-label">Объём недели</div>
+        </div>
+        <div class="week-stat-item">
+          <div class="week-stat-value">4/4</div>
+          <div class="week-stat-label">Тренировки</div>
+        </div>
+        <div class="week-stat-item">
+          <div class="week-stat-value">${weekKcal}</div>
+          <div class="week-stat-label">Калории</div>
+        </div>
+        <div class="week-stat-item" style="background:rgba(50,215,75,.1);border-color:var(--success)">
+          <div class="week-stat-value" style="color:var(--success)">${DAY_NAMES[bestDay]}</div>
+          <div class="week-stat-label">Лучший день</div>
+        </div>
+      </div>
+    `;
+  }
+
+  html+= `<div class="section-label" style="padding-left:0">Веса по упражнениям</div>`;
+
   const dayExercises=[];
-  WORKOUTS[currentDay].ss.forEach(ss=>ss.ex.forEach(ex=>dayExercises.push(ex)));
+  WORKOUTS[currentDay].ss.forEach(ss=>ss.ex.forEach(ex=>dayExercises.push({...ex, ssId: ss.id})));
 
   dayExercises.forEach((ex,i)=>{
     const chartId='chart-'+i;
@@ -383,7 +451,7 @@ function renderReport(container){
         <div class="week-end-title">Неделя завершена!</div>
         <div class="week-end-sub">Все 4 тренировки выполнены</div>
       </div>
-      <button class="next-btn reset" onclick="resetWeek()">Начать новую неделю</button>`;
+      <button class="next-btn reset" onclick="resetWeek()">Начать новую ��еделю</button>`;
   } else if(idx<DAY_ORDER.length-1){
     const next=DAY_ORDER[idx+1];
     html+=`<button class="next-btn primary" onclick="switchDay('${next}')">Перейти к ${DAY_NAMES[next]}</button>`;
@@ -481,11 +549,14 @@ function renderReport(container){
 }
 
 /* ── ACTIONS ── */
-function adjustW(name,def,delta){
+function adjustW(name,delta){
+  const def = WORKOUTS[currentDay].ss.flatMap(s=>s.ex).find(e=>e.name===name)?.w||0;
   const cur=getWeight(name,def);
   setWeight(name,Math.round((cur+delta)*10)/10);
-  render();haptic('light');
+  render();
+  haptic('light');
 }
+
 function editW(name,def){
   const cur=getWeight(name,def);
   const v=prompt(`Вес для "${name}" (кг):`,cur);
@@ -499,12 +570,25 @@ function logSet(ssId,rest){
   const curSet=getCurSet(ssId);
   lastSetSnapshot={ssId,prevSet:curSet,prevVol:db.weekVol[currentDay]||0};
   let vol=0;
-  ss.ex.forEach(ex=>{ vol+=getWeight(ex.name,ex.w)*ex.reps; });
+  ss.ex.forEach(ex=>{
+    const w=getWeight(ex.name,ex.w);
+    vol+=w*ex.reps;
+    
+    /* ФИЧА 2: ПРОВЕРКА РЕКОРДОВ */
+    const prKey = ex.name;
+    const prevBest = db.personalRecords[prKey]||db.baseWeights[ex.name]||ex.w;
+    if(w > prevBest) {
+      db.personalRecords[prKey] = w;
+      showPRNotification(ex.name, w);
+    }
+  });
+  
   db.progress[ssId]=curSet+1;
   db.weekVol[currentDay]=(db.weekVol[currentDay]||0)+vol;
   saveDB();
   haptic('medium');
-  render();startTimer(rest);
+  render();
+  startTimer(rest);
   showUndo(`Подход ${curSet}/${ss.sets} засчитан`);
 }
 
@@ -514,7 +598,11 @@ function undoLastSet(){
   db.progress[ssId]=prevSet;
   db.weekVol[currentDay]=prevVol;
   lastSetSnapshot=null;
-  saveDB();skipTimer();hideUndo();render();haptic('light');
+  saveDB();
+  skipTimer();
+  hideUndo();
+  render();
+  haptic('light');
 }
 
 function completeWorkout(){
@@ -526,6 +614,17 @@ function completeWorkout(){
 
 function resetWeek(){
   if(!confirm('Сбросить прогресс недели и начать заново?'))return;
+  
+  /* ФИЧА 1: СОХРАНЕНИЕ ИСТОРИИ НЕДЕЛЬ */
+  const weekSnapshot = {
+    weekNum: db.weekNum,
+    date: new Date().toISOString(),
+    volume: Object.values(db.weekVol).reduce((a,b)=>a+b,0),
+    weights: {...db.weights},
+    doneDays: {...db.doneDays}
+  };
+  db.weekHistory.push(weekSnapshot);
+  
   db.prevWeights={...db.weights};
   db.weekNum=(db.weekNum||1)+1;
   db.progress={};
@@ -533,9 +632,24 @@ function resetWeek(){
   db.weekVol={};
   saveDB();
   currentDay='mon';
-  // ИСПРАВЛЕНИЕ 3: скролл наверх при начале новой недели
   window.scrollTo(0, 0);
   render();
+}
+
+function showPRNotification(exName, weight){
+  haptic('success');
+  if(navigator.vibrate) navigator.vibrate([100,50,100]);
+  
+  const notif = document.getElementById('pr-notification');
+  document.getElementById('pr-exercise').innerText = exName;
+  document.getElementById('pr-weight').innerText = weight + ' кг';
+  notif.classList.add('show');
+  document.getElementById('overlay').style.display='block';
+  
+  setTimeout(()=>{
+    notif.classList.remove('show');
+    document.getElementById('overlay').style.display='none';
+  }, 2500);
 }
 
 function showUndo(msg){
@@ -544,6 +658,7 @@ function showUndo(msg){
   document.getElementById('undo-toast').style.display='flex';
   undoTimeout=setTimeout(hideUndo,4000);
 }
+
 function hideUndo(){
   document.getElementById('undo-toast').style.display='none';
   lastSetSnapshot=null;
@@ -556,7 +671,8 @@ function startTimer(secs){
   pill.style.display='flex';
   document.getElementById('t-sec').innerText=timerLeft;
   const fill=document.getElementById('timer-bar-fill');
-  fill.style.transition='none';fill.style.width='100%';
+  fill.style.transition='none';
+  fill.style.width='100%';
   setTimeout(()=>{
     fill.style.transition=`width ${secs}s linear`;
     fill.style.width='0%';
@@ -568,10 +684,13 @@ function startTimer(secs){
     if(timerLeft<=0){skipTimer();if(tg?.HapticFeedback)tg.HapticFeedback.notificationOccurred('success');}
   },1000);
 }
+
 function skipTimer(){
-  clearInterval(timerInterval);timerInterval=null;
+  clearInterval(timerInterval);
+  timerInterval=null;
   document.getElementById('timer-pill').style.display='none';
 }
+
 function haptic(t){
   if(!tg?.HapticFeedback)return;
   if(t==='success')tg.HapticFeedback.notificationOccurred('success');
