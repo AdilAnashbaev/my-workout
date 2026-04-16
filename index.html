@@ -82,7 +82,7 @@ body{padding:0 0 160px}
 .btn-adj{flex:1;background:var(--sep);border:none;border-radius:12px;padding:11px 5px;color:var(--text);font-size:14px;font-weight:700;cursor:pointer;transition:all .15s}
 .btn-adj:active{transform:scale(.95);opacity:.7}
 .btn-adj.minus{color:var(--sec)}
-.btn-edit{width:44px;height:44px;background:var(--sep);border:none;border-radius:12px;color:var(--sec);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.btn-edit{width:44px;height:44px;background:var(--sep);border:none;border-radius:12px;color:var(--sec);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .btn-edit:active{transform:scale(.95)}
 
 /* SET BUTTON */
@@ -98,7 +98,7 @@ body{padding:0 0 160px}
 .finish-btn:active{transform:scale(.98)}
 
 /* TIMER PILL */
-.timer-pill{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 24px);left:50%;transform:translateX(-50%);background:#1C1C1E;border:1px solid var(--border);border-radius:100px;display:none;align-items:center;z-index:1000;box-shadow:0 8px 32px rgba(0,0,0,.6);overflow:hidden;min-width:220px}
+.timer-pill{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 24px);left:50%;transform:translateX(-50%);background:#1C1C1E;border:1px solid var(--border);border-radius:100px;display:none;align-items:stretch;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,0.4)}
 .timer-left{padding:12px 18px;flex:1}
 .timer-label{font-size:10px;font-weight:700;color:var(--sec);text-transform:uppercase;letter-spacing:.8px}
 .timer-count{font-size:22px;font-weight:800;color:var(--text);display:block}
@@ -132,7 +132,7 @@ body{padding:0 0 160px}
 .week-end-sub{font-size:15px;color:var(--sec);margin-bottom:20px}
 
 /* UNDO TOAST */
-.undo-toast{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 90px);left:16px;right:16px;background:#3A3A3C;border-radius:14px;padding:13px 16px;display:none;align-items:center;justify-content:space-between;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+.undo-toast{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 90px);left:16px;right:16px;background:#3A3A3C;border-radius:14px;padding:13px 16px;display:none;align-items:center;justify-content:space-between;z-index:998}
 .undo-text{font-size:14px;font-weight:500}
 .undo-btn{background:transparent;border:none;color:var(--accent);font-size:14px;font-weight:700;cursor:pointer;padding:0}
 </style>
@@ -211,16 +211,11 @@ if(!db.progress)  db.progress={};
 if(!db.doneDays)  db.doneDays={};
 if(!db.weights)   db.weights={};
 if(!db.weekVol)   db.weekVol={};
-// weightHistory: { exName: [ [week1_val, week2_val, ...] ] }
-// we store per-week snapshots as arrays; current week is built from db.weights
-// prevWeights: snapshot of weights at end of last week for comparison
 if(!db.prevWeights) db.prevWeights={};
 if(!db.weekNum)     db.weekNum=1;
 
-let currentDay = (() => {
-  const map={1:'mon',2:'tue',4:'thu',5:'fri'};
-  return map[new Date().getDay()]||'mon';
-})();
+// ИСПРАВЛЕНИЕ 1: всегда начинаем с понедельника (вместо автоматического дня)
+let currentDay = 'mon';
 
 let timerInterval=null, timerLeft=0, undoTimeout=null, lastSetSnapshot=null;
 let chartInstances={};
@@ -229,23 +224,24 @@ function getWeight(name,def){return db.weights[name]!==undefined?db.weights[name
 function setWeight(name,w){db.weights[name]=Math.max(0,w);saveDB();}
 function getCurSet(id){return db.progress[id]||1;}
 
-function switchDay(id){currentDay=id;render();}
+function switchDay(id){
+  currentDay=id;
+  // ИСПРАВЛЕНИЕ 2: скролл наверх при смене дня
+  window.scrollTo(0, 0);
+  render();
+}
 
 /* ── PROGRESS BAR ── */
 function renderTabs(){
   const doneCount = DAY_ORDER.filter(d=>db.doneDays[d]).length;
   document.getElementById('week-badge').innerText=`${doneCount}/4 готово`;
 
-  // find index of last done day to determine fill width
-  // fill covers all done segments continuously from left
   let lastDoneIdx = -1;
   DAY_ORDER.forEach((d,i)=>{ if(db.doneDays[d]) lastDoneIdx=i; });
 
-  // width = how many segments are done out of 4, as fraction
   const fillPct = ((lastDoneIdx+1)/DAY_ORDER.length)*100;
   const fill = document.getElementById('prog-fill');
   fill.style.width = fillPct+'%';
-  // make fill corners follow track
   fill.style.borderRadius = fillPct>=100 ? '13px' : '13px 0 0 13px';
 
   DAY_ORDER.forEach((d,i)=>{
@@ -259,7 +255,6 @@ function renderTabs(){
 function render(){
   document.getElementById('day-title').innerText=WORKOUTS[currentDay].name;
   renderTabs();
-  // destroy old charts
   Object.values(chartInstances).forEach(c=>c.destroy());
   chartInstances={};
 
@@ -317,7 +312,7 @@ function renderSS(container,ss,curSet,isDone){
         </div>`;
     });
     const isLast=curSet===ss.sets;
-    html+=`<div class="set-btn-wrap"><button class="set-btn ${isLast?'last-set':'ready'}" onclick="logSet('${ss.id}',${ss.rest})">${isLast?'Последний подход — завершить':'Подход '+curSet+' выполнен'}</button></div>`;
+    html+=`<div class="set-btn-wrap"><button class="set-btn ${isLast?'last-set':'ready'}" onclick="logSet('${ss.id}',${ss.rest})">${isLast?'Последний подход — завершить':'Подход выполнен'}</button></div>`;
   } else {
     html+=`<div style="padding:14px 16px;color:var(--success);font-size:14px;font-weight:600;text-align:center">Суперсет завершён</div>`;
   }
@@ -335,7 +330,6 @@ function renderReport(container){
   const rep=document.createElement('div');
   rep.className='report';
 
-  // stats
   let html=`
     <div class="section-label" style="padding-left:0">Итоги тренировки</div>
     <div class="stats-grid">
@@ -345,7 +339,6 @@ function renderReport(container){
     <div class="section-label" style="padding-left:0">Веса по упражнениям</div>
   `;
 
-  // chart cards — one per exercise in this day
   const dayExercises=[];
   WORKOUTS[currentDay].ss.forEach(ss=>ss.ex.forEach(ex=>dayExercises.push(ex)));
 
@@ -359,7 +352,6 @@ function renderReport(container){
       </div>`;
   });
 
-  // next action
   if(allWeekDone){
     html+=`
       <div class="week-end">
@@ -376,7 +368,6 @@ function renderReport(container){
   rep.innerHTML=html;
   container.appendChild(rep);
 
-  // draw charts after DOM is ready
   requestAnimationFrame(()=>{
     dayExercises.forEach((ex,i)=>{
       const chartId='chart-'+i;
@@ -387,8 +378,6 @@ function renderReport(container){
       const prevW=db.prevWeights[ex.name]!==undefined?db.prevWeights[ex.name]:ex.w;
       const defaultW=ex.w;
 
-      // Build labels and data
-      // Show: default → prev week → this week
       const hasPrev = db.prevWeights[ex.name]!==undefined;
       let labels, data, colors;
 
@@ -400,7 +389,6 @@ function renderReport(container){
         data=[defaultW, curW];
       }
 
-      // Color bars: last bar green if improved, red if regressed, grey if same
       colors = data.map((v,i)=>{
         if(i<data.length-1) return 'rgba(142,142,147,0.4)';
         const prev=data[i-1]||v;
@@ -412,7 +400,6 @@ function renderReport(container){
       const diff=curW-(hasPrev?prevW:defaultW);
       const diffStr=diff===0?'без изменений':(diff>0?'+'+diff+'кг':diff+'кг');
 
-      // update subtitle
       const sub=canvas.closest('.chart-card').querySelector('.chart-sub');
       sub.innerHTML=`${ex.reps} повт &nbsp;·&nbsp; <span style="color:${diff>0?'var(--success)':diff<0?'#FF453A':'var(--sec)'};font-weight:700">${diffStr}</span>`;
 
@@ -515,15 +502,15 @@ function completeWorkout(){
 
 function resetWeek(){
   if(!confirm('Сбросить прогресс недели и начать заново?'))return;
-  // save current weights as prev week snapshot before resetting
   db.prevWeights={...db.weights};
   db.weekNum=(db.weekNum||1)+1;
   db.progress={};
   db.doneDays={};
   db.weekVol={};
-  // weights are KEPT — user keeps their current weights for next week
   saveDB();
   currentDay='mon';
+  // ИСПРАВЛЕНИЕ 3: скролл наверх при начале новой недели
+  window.scrollTo(0, 0);
   render();
 }
 
