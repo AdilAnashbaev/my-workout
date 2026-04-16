@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Fitness OS Ultra</title>
+    <title>Fitness OS Pro v7</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -12,55 +12,48 @@
             --warmup: #FF9F0A; --text: #FFF; --sec: #8E8E93; --border: #2C2C2E;
         }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px 16px 140px; }
-        
         .header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; }
         .date-label { color: var(--sec); font-size: 12px; font-weight: 700; text-transform: uppercase; }
         
-        /* Прогресс-бар из дней */
         .progress-nav { display: flex; background: #2C2C2E; border-radius: 14px; overflow: hidden; margin-bottom: 25px; height: 50px; border: 1px solid var(--border); }
-        .day-tab { flex: 1; border: none; background: transparent; color: var(--sec); font-weight: 800; font-size: 14px; transition: 0.3s; position: relative; cursor: pointer; }
+        .day-tab { flex: 1; border: none; background: transparent; color: var(--sec); font-weight: 800; font-size: 14px; transition: 0.3s; cursor: pointer; }
         .day-tab.active { color: #fff; background: #48484A; }
         .day-tab.completed { background: var(--success) !important; color: #000 !important; }
         .day-tab:not(:last-child) { border-right: 1px solid #3A3A3C; }
 
         .card { background: var(--card); border-radius: 20px; padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); }
+        .ss-header { display: flex; justify-content: space-between; margin-bottom: 15px; }
         .ss-title { color: var(--accent); font-size: 11px; font-weight: 800; text-transform: uppercase; }
         .set-badge { background: #2C2C2E; padding: 4px 10px; border-radius: 8px; font-size: 12px; color: var(--success); font-weight: 700; }
         
         .ex-row { margin-bottom: 15px; border-bottom: 1px solid #2C2C2E; padding-bottom: 15px; }
         .ex-name { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
-        
         .controls { display: flex; gap: 8px; }
         .btn-w { flex: 1; background: #2C2C2E; border: 1px solid var(--border); border-radius: 12px; padding: 12px 5px; color: white; text-align: center; }
         .btn-w.active { border-color: var(--accent); background: rgba(10,132,255,0.1); }
-        .btn-w b { display: block; font-size: 16px; }
         .btn-edit { width: 50px; background: #2C2C2E; border-radius: 12px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 20px; }
 
-        .main-btn { background: var(--accent); color: white; width: 100%; border: none; padding: 20px; border-radius: 18px; font-size: 17px; font-weight: 700; margin-top: 10px; box-shadow: 0 4px 15px rgba(10,132,255,0.2); }
+        .main-btn { background: var(--accent); color: white; width: 100%; border: none; padding: 20px; border-radius: 18px; font-size: 17px; font-weight: 700; margin-top: 10px; }
         
-        /* Отчет в конце */
-        #report-overlay { display: none; margin-top: 20px; animation: slideUp 0.5s ease; }
+        #report-overlay { display: none; margin-top: 20px; }
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
         .stat-box { background: #1C1C1E; padding: 15px; border-radius: 16px; border: 1px solid var(--border); }
         .stat-val { font-size: 22px; font-weight: 800; color: var(--success); }
-        .stat-label { font-size: 11px; color: var(--sec); text-transform: uppercase; margin-top: 4px; }
-
+        
         #timer-pill { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--accent); padding: 12px 25px; border-radius: 100px; display: none; align-items: center; gap: 12px; z-index: 1000; box-shadow: 0 10px 25px rgba(10,132,255,0.4); }
-
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
 <div id="timer-pill" onclick="skipTimer()">
-    <span id="t-label" style="font-weight: 800; font-size: 14px;">REST</span>
-    <span id="t-sec" style="font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums;">90</span>
+    <span style="font-weight: 800; font-size: 14px;">REST</span>
+    <span id="t-sec" style="font-size: 18px; font-weight: 800;">90</span>
 </div>
 
 <div class="header">
     <div>
         <div class="date-label" id="cur-date"></div>
-        <h1 id="day-name" style="margin: 0; font-size: 32px;">Workout</h1>
+        <h1 id="day-display-name" style="margin: 0; font-size: 28px;">Workout</h1>
     </div>
 </div>
 
@@ -74,43 +67,51 @@
 <div id="exercise-list"></div>
 
 <div id="report-overlay">
-    <h2 style="margin-bottom: 15px;">Workout Report 📊</h2>
+    <h2 style="margin-bottom: 15px;">Отчет за сегодня 📊</h2>
     <div class="stat-grid">
-        <div class="stat-box"><div class="stat-val" id="stat-volume">0</div><div class="stat-label">Volume (kg)</div></div>
-        <div class="stat-box"><div class="stat-val" id="stat-kcal">0</div><div class="stat-label">Est. Calories</div></div>
+        <div class="stat-box"><div class="stat-val" id="stat-vol">0</div><div style="font-size:11px; color:var(--sec)">ОБЪЕМ (КГ)</div></div>
+        <div class="stat-box"><div class="stat-val" id="stat-kc">0</div><div style="font-size:11px; color:var(--sec)">КАЛОРИИ</div></div>
     </div>
-    <div class="card"><canvas id="reportChart" style="max-height: 150px;"></canvas></div>
     <div id="next-action-area"></div>
 </div>
 
-<button id="finish-btn" class="main-btn" style="background: var(--success); color: #000; display: none;" onclick="completeWorkout()">FINISH WORKOUT</button>
+<button id="finish-btn" class="main-btn" style="background: var(--success); color: #000; display: none;" onclick="completeWorkout()">ЗАВЕРШИТЬ ТРЕНИРОВКУ</button>
 
 <script>
 const tg = window.Telegram.WebApp;
 tg.expand();
 
+// ПОЛНАЯ БАЗА ТРЕНИРОВОК
 const workoutData = {
-    mon: { name: "Upper / Push-Pull", order: 0, ss: [
-        { id: "m1", sets: 5, rest: 120, ex: [{ name: "Chest Press", work: {w:70, r:8} }, { name: "Lat Pulldown", work: {w:70, r:8} }] },
-        { id: "m2", sets: 4, rest: 90, ex: [{ name: "Shoulder Press", work: {w:60, r:8} }, { name: "Cable Row", work: {w:80, r:8} }] }
+    mon: { name: "Upper / Push-Pull", ss: [
+        { id: "mon_1", sets: 5, rest: 120, ex: [{ name: "Chest Press", w: 70 }, { name: "Lat Pulldown", w: 70 }] },
+        { id: "mon_2", sets: 4, rest: 90, ex: [{ name: "Shoulder Press", w: 60 }, { name: "Cable Row", w: 80 }] },
+        { id: "mon_3", sets: 4, rest: 60, ex: [{ name: "Preacher Curl", w: 35 }, { name: "Tricep Kickback", w: 10 }] }
     ]},
-    tue: { name: "Lower / Hypertrophy", order: 1, ss: [
-        { id: "t1", sets: 4, rest: 150, ex: [{ name: "Leg Press", work: {w:140, r:10} }, { name: "Leg Curl", work: {w:20, r:10} }] }
+    tue: { name: "Lower / Hypertrophy", ss: [
+        { id: "tue_1", sets: 4, rest: 150, ex: [{ name: "Leg Press", w: 140 }, { name: "Leg Curl", w: 20 }] },
+        { id: "tue_2", sets: 3, rest: 120, ex: [{ name: "Hack Squat", w: 90 }, { name: "Leg Extension", w: 25 }] },
+        { id: "tue_3", sets: 3, rest: 60, ex: [{ name: "DB Hammer Curls", w: 12 }, { name: "Tricep Pushdown", w: 22 }] }
     ]},
-    thu: { name: "Upper / Incline", order: 2, ss: [
-        { id: "h1", sets: 4, rest: 120, ex: [{ name: "Incline DB Press", work: {w:22, r:10} }, { name: "Lat Pulldown", work: {w:70, r:8} }] }
+    thu: { name: "Upper / Incline Focus", ss: [
+        { id: "thu_1", sets: 4, rest: 120, ex: [{ name: "Incline DB Press", w: 22 }, { name: "Lat Pulldown Machine", w: 70 }] },
+        { id: "thu_2", sets: 4, rest: 90, ex: [{ name: "Supported Row", w: 80 }, { name: "Lateral Raise", w: 8 }] },
+        { id: "thu_3", sets: 4, rest: 60, ex: [{ name: "Preacher Curl", w: 35 }, { name: "Tricep Kickback", w: 10 }] }
     ]},
-    fri: { name: "Lower / Mix", order: 3, ss: [
-        { id: "f1", sets: 4, rest: 150, ex: [{ name: "Leg Press", work: {w:140, r:10} }, { name: "Leg Curl", work: {w:20, r:10} }] }
+    fri: { name: "Lower / Mix Finish", ss: [
+        { id: "fri_1", sets: 4, rest: 150, ex: [{ name: "Leg Press", w: 140 }, { name: "Leg Curl", w: 20 }] },
+        { id: "fri_2", sets: 3, rest: 120, ex: [{ name: "Hack Squat", w: 90 }, { name: "Leg Extension", w: 25 }] },
+        { id: "fri_3", sets: 3, rest: 60, ex: [{ name: "DB Hammer Curls", w: 12 }, { name: "Overhead Tricep", w: 22 }] }
     ]}
 };
 
-let db = JSON.parse(localStorage.getItem('fit_os_v6')) || { history: {}, progress: {}, doneDays: {} };
+const dayOrder = ['mon', 'tue', 'thu', 'fri'];
+let db = JSON.parse(localStorage.getItem('fit_os_v7')) || { history: {}, progress: {}, doneDays: {} };
 let currentDay = 'mon';
-let sessionLogs = []; // Лог текущей тренировки для отчета
+let sessionVolume = 0;
 let timerInterval;
 
-function save() { localStorage.setItem('fit_os_v6', JSON.stringify(db)); }
+function save() { localStorage.setItem('fit_os_v7', JSON.stringify(db)); }
 
 function switchDay(id) {
     currentDay = id;
@@ -120,152 +121,112 @@ function switchDay(id) {
 
 function render() {
     const day = workoutData[currentDay];
-    document.getElementById('day-name').innerText = day.name;
+    document.getElementById('day-display-name').innerText = day.name;
     
-    // Обновляем прогресс-бар (табы)
-    Object.keys(workoutData).forEach(d => {
-        const tab = document.getElementById('tab-'+d);
-        tab.className = `day-tab ${d === currentDay ? 'active' : ''} ${db.doneDays[d] ? 'completed' : ''}`;
+    dayOrder.forEach(d => {
+        const t = document.getElementById('tab-'+d);
+        t.className = `day-tab ${d === currentDay ? 'active' : ''} ${db.doneDays[d] ? 'completed' : ''}`;
     });
 
     const list = document.getElementById('exercise-list');
     list.innerHTML = '';
-    let allFinished = true;
+    let dayFinished = true;
 
     day.ss.forEach(ss => {
         const curSet = db.progress[ss.id] || 1;
         const isDone = curSet > ss.sets;
-        if(!isDone) allFinished = false;
+        if(!isDone) dayFinished = false;
 
         const card = document.createElement('div');
         card.className = 'card';
         if(isDone) card.style.opacity = '0.3';
 
-        let html = `<div style="display:flex; justify-content:space-between; margin-bottom:15px"><span class="ss-title">Superset</span><span class="set-badge">${isDone ? 'DONE' : 'SET '+curSet+'/'+ss.sets}</span></div>`;
+        let html = `<div class="ss-header"><span class="ss-title">SUPERSET</span><span class="set-badge">${isDone ? '✓' : 'SET '+curSet+'/'+ss.sets}</span></div>`;
 
         if(!isDone) {
             ss.ex.forEach(ex => {
                 const hist = db.history[ex.name] || [];
-                const lastW = hist.length > 0 ? hist[hist.length-1] : ex.work.w;
+                const currentW = hist.length > 0 ? hist[hist.length-1] : ex.w;
                 html += `
                     <div class="ex-row">
                         <div class="ex-name">${ex.name}</div>
                         <div class="controls">
-                            <div class="btn-w active"><b>${lastW}kg</b><i>Weight</i></div>
-                            <div class="btn-w" onclick="quickAdd('${ex.name}', 2.5)"><b>+2.5</b></div>
-                            <div class="btn-edit" onclick="manualEdit('${ex.name}')">✎</div>
+                            <div class="btn-w active"><b>${currentW}кг</b></div>
+                            <div class="btn-w" onclick="addW('${ex.name}', 2.5)"><b>+2.5</b></div>
+                            <div class="btn-edit" onclick="setW('${ex.name}')">✎</div>
                         </div>
                     </div>
                 `;
             });
-            html += `<button class="main-btn" onclick="finishSet('${ss.id}', ${ss.rest})">COMPLETE SET</button>`;
+            html += `<button class="main-btn" onclick="nextSet('${ss.id}', ${ss.rest})">ЗАВЕРШИТЬ ПОДХОД</button>`;
+        } else {
+            html += `<div style="text-align:center; color:var(--success); font-weight:700">Выполнено</div>`;
         }
         card.innerHTML = html;
         list.appendChild(card);
     });
 
-    document.getElementById('finish-btn').style.display = (allFinished && !db.doneDays[currentDay]) ? 'block' : 'none';
+    document.getElementById('finish-btn').style.display = (dayFinished && !db.doneDays[currentDay]) ? 'block' : 'none';
 }
 
-function quickAdd(name, val) {
-    const hist = db.history[name] || [0];
-    const newW = hist[hist.length-1] + val;
+function addW(name, v) {
+    const h = db.history[name] || [workoutData[currentDay].ss.find(s=>s.ex.find(e=>e.name===name)).ex.find(e=>e.name===name).w];
     if(!db.history[name]) db.history[name] = [];
-    db.history[name].push(newW);
-    render();
+    db.history[name].push(h[h.length-1] + v);
+    save(); render();
 }
 
-function manualEdit(name) {
-    const w = prompt("Weight:", "");
-    if(w) { 
-        if(!db.history[name]) db.history[name] = [];
-        db.history[name].push(parseFloat(w));
-        render(); 
-    }
+function setW(name) {
+    const p = prompt("Введите вес:", "");
+    if(p) { if(!db.history[name]) db.history[name] = []; db.history[name].push(parseFloat(p)); save(); render(); }
 }
 
-function finishSet(ssId, rest) {
+function nextSet(ssId, rest) {
     const ss = workoutData[currentDay].ss.find(s => s.id === ssId);
     ss.ex.forEach(ex => {
-        const w = db.history[ex.name]?.slice(-1)[0] || ex.work.w;
-        sessionLogs.push({ name: ex.name, weight: w, reps: 10 });
+        const weight = db.history[ex.name]?.slice(-1)[0] || ex.w;
+        sessionVolume += (weight * 10);
     });
     db.progress[ssId] = (db.progress[ssId] || 1) + 1;
-    save();
-    startTimer(rest);
-    render();
+    save(); startTimer(rest); render();
 }
 
 function startTimer(s) {
     clearInterval(timerInterval);
-    const pill = document.getElementById('timer-pill');
-    pill.style.display = 'flex';
-    let left = s;
-    document.getElementById('t-sec').innerText = left;
-    timerInterval = setInterval(() => {
-        left--;
-        document.getElementById('t-sec').innerText = left;
-        if(left <= 0) skipTimer();
-    }, 1000);
+    const p = document.getElementById('timer-pill'); p.style.display = 'flex';
+    let l = s; document.getElementById('t-sec').innerText = l;
+    timerInterval = setInterval(() => { l--; document.getElementById('t-sec').innerText = l; if(l<=0) skipTimer(); }, 1000);
 }
 
-function skipTimer() {
-    clearInterval(timerInterval);
-    document.getElementById('timer-pill').style.display = 'none';
-}
+function skipTimer() { clearInterval(timerInterval); document.getElementById('timer-pill').style.display = 'none'; }
 
 function completeWorkout() {
     db.doneDays[currentDay] = true;
     save();
-    showReport();
+    document.getElementById('exercise-list').innerHTML = '';
+    document.getElementById('finish-btn').style.display = 'none';
+    
+    const rep = document.getElementById('report-overlay');
+    rep.style.display = 'block';
+    document.getElementById('stat-vol').innerText = sessionVolume;
+    document.getElementById('stat-kc').innerText = Math.floor(sessionVolume * 0.04 + 120);
+
+    const area = document.getElementById('next-action-area');
+    const idx = dayOrder.indexOf(currentDay);
+    
+    if (idx < dayOrder.length - 1) {
+        const next = dayOrder[idx + 1];
+        area.innerHTML = `<button class="main-btn" onclick="switchDay('${next}')">ПЕРЕЙТИ К ${next === 'tue' ? 'ВТОРНИКУ' : next === 'thu' ? 'ЧЕТВЕРГУ' : 'ПЯТНИЦЕ'}</button>`;
+    } else {
+        area.innerHTML = `<div style="color:var(--success); text-align:center; margin:20px 0; font-weight:800">НЕДЕЛЯ ЗАВЕРШЕНА! 🔥</div>
+                          <button class="main-btn" style="background:#fff; color:#000" onclick="resetAll()">НАЧАТЬ НОВУЮ НЕДЕЛЮ</button>`;
+    }
     tg.HapticFeedback.notificationOccurred('success');
 }
 
-function showReport() {
-    document.getElementById('exercise-list').innerHTML = '';
-    document.getElementById('finish-btn').style.display = 'none';
-    const report = document.getElementById('report-overlay');
-    report.style.display = 'block';
-
-    let totalVolume = 0;
-    sessionLogs.forEach(l => totalVolume += (l.weight * l.reps));
-    document.getElementById('stat-volume').innerText = totalVolume;
-    document.getElementById('stat-kcal').innerText = Math.floor(totalVolume * 0.05 + 150); // Примерный расчет
-
-    // График объема в отчете
-    const ctx = document.getElementById('reportChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: sessionLogs.map(l => l.name.substring(0,6)),
-            datasets: [{ label: 'kg', data: sessionLogs.map(l => l.weight), backgroundColor: '#0A84FF', borderRadius: 5 }]
-        },
-        options: { plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { ticks: { color: '#8E8E93' } } } }
-    });
-
-    // Логика следующего шага
-    const actionArea = document.getElementById('next-action-area');
-    const days = Object.keys(workoutData);
-    const currentIndex = days.indexOf(currentDay);
-    
-    if (currentIndex < days.length - 1) {
-        const nextDay = days[currentIndex + 1];
-        actionArea.innerHTML = `<button class="main-btn" onclick="switchDay('${nextDay}')">GO TO ${nextDay.toUpperCase()}</button>`;
-    } else {
-        actionArea.innerHTML = `
-            <div style="text-align:center; margin: 20px 0; color: var(--success); font-weight: 800;">WEEK COMPLETE! 🔥</div>
-            <button class="main-btn" style="background:#fff; color:#000;" onclick="resetWeek()">START NEXT WEEK</button>
-        `;
-    }
-}
-
-function resetWeek() {
-    if(confirm("Начать новую неделю?")) {
-        db.progress = {};
-        db.doneDays = {};
-        save();
-        sessionLogs = [];
-        switchDay('mon');
+function resetAll() {
+    if(confirm("Сбросить прогресс недели?")) {
+        db.progress = {}; db.doneDays = {}; sessionVolume = 0; save(); switchDay('mon');
     }
 }
 
