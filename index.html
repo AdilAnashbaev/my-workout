@@ -1,84 +1,69 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Fitness Coach OS Pro</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="icon" type="image/png" href="icon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Fitness Coach OS</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --bg: #000; --card: #1C1C1E; --accent: #0A84FF; --success: #32D74B; 
             --warmup: #FF9F0A; --text: #FFF; --sec: #8E8E93; --border: #2C2C2E;
         }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px 16px 100px; }
-        
-        /* Typography */
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px 16px 120px; }
         .date-label { color: var(--sec); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
         h1 { font-size: 28px; font-weight: 800; margin: 5px 0 20px; }
-
-        /* Day Tabs */
         .tabs { display: flex; background: #2C2C2E; padding: 2px; border-radius: 12px; margin-bottom: 20px; }
         .tab { flex: 1; border: none; background: none; color: var(--sec); padding: 12px 0; font-weight: 600; border-radius: 10px; position: relative; }
         .tab.active { background: #636366; color: white; }
-        .tab.done::after { content: ''; position: absolute; top: 8px; right: 8px; width: 6px; height: 6px; background: var(--success); border-radius: 50%; }
-
-        /* Exercise Card */
+        .tab.done::after { content: '●'; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); color: var(--success); font-size: 8px; }
         .card { background: var(--card); border-radius: 20px; padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); }
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
         .set-info { font-size: 12px; font-weight: 700; color: var(--success); background: #2C2C2E; padding: 4px 10px; border-radius: 8px; }
-        
         .ex-row { margin-bottom: 15px; border-bottom: 1px solid #2C2C2E; padding-bottom: 15px; }
         .ex-row:last-child { border: none; }
         .ex-name { font-size: 17px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
-        .ex-name span { color: var(--accent); font-size: 14px; cursor: pointer; } /* Кнопка графика */
-        
+        .ex-name span { color: var(--accent); font-size: 14px; cursor: pointer; }
         .target { font-size: 13px; color: var(--sec); margin: 4px 0 10px; }
-        .badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 800; text-transform: uppercase; }
+        .badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 800; text-transform: uppercase; margin-right: 5px; }
         .warm { background: rgba(255,159,10,0.15); color: var(--warmup); }
         .work { background: rgba(10,132,255,0.15); color: var(--accent); }
-
-        /* Control Buttons */
         .controls { display: flex; gap: 8px; }
         .btn-w { flex: 1; background: #2C2C2E; border: 1px solid var(--border); border-radius: 12px; padding: 10px; color: white; text-align: center; }
         .btn-w.active { border-color: var(--accent); background: rgba(10,132,255,0.1); }
         .btn-w b { display: block; font-size: 16px; }
         .btn-w i { font-size: 11px; color: var(--sec); font-style: normal; }
         .btn-edit { width: 44px; background: #2C2C2E; border: 1px solid var(--border); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-
         .main-btn { background: var(--accent); color: white; width: 100%; border: none; padding: 18px; border-radius: 16px; font-size: 17px; font-weight: 700; margin-top: 10px; }
-        
-        /* Modal & Timer */
-        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; display: none; flex-direction: column; padding: 40px 20px; }
-        .chart-container { background: var(--card); border-radius: 20px; padding: 15px; flex-grow: 1; }
-        
+        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; display: none; flex-direction: column; padding: 40px 20px; }
+        .chart-container { background: var(--card); border-radius: 20px; padding: 15px; flex-grow: 1; min-height: 300px; }
         #timer-ui { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--accent); padding: 15px 30px; border-radius: 100px; display: none; align-items: center; gap: 15px; box-shadow: 0 10px 30px rgba(10,132,255,0.3); z-index: 999; }
         #timer-ui span { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
-        #timer-ui b { font-size: 14px; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
 <div id="modal">
-    <h2 id="modal-title">Progress</h2>
+    <h2 id="modal-title" style="margin-bottom: 20px;">Progress</h2>
     <div class="chart-container"><canvas id="myChart"></canvas></div>
     <button class="main-btn" onclick="closeModal()" style="margin-top: 20px;">BACK</button>
 </div>
 
 <div id="timer-ui" onclick="skipTimer()">
-    <b id="t-label">REST</b>
+    <b id="t-label" style="font-size: 14px;">REST</b>
     <span id="t-sec">90</span>
-    <b style="opacity: 0.7">SKIP</b>
+    <b style="opacity: 0.7; font-size: 14px;">SKIP</b>
 </div>
 
 <div class="date-label" id="date"></div>
 <h1 id="day-title">Workout</h1>
 
-<div class="tabs" id="day-tabs">
+<div class="tabs">
     <button class="tab" id="t-mon" onclick="setDay('mon')">ПН</button>
     <button class="tab" id="t-tue" onclick="setDay('tue')">ВТ</button>
     <button class="tab" id="t-thu" onclick="setDay('thu')">ЧТ</button>
@@ -86,39 +71,73 @@
 </div>
 
 <div id="exercises"></div>
-<button id="finish-btn" class="main-btn" style="background: var(--success); color: black; display: none;" onclick="finishDay()">COMPLETE WORKOUT</button>
+<button id="finish-btn" class="main-btn" style="background: var(--success); color: black; display: none;" onclick="finishDay()">ЗАВЕРШИТЬ ТРЕНИРОВКУ</button>
 
 <script>
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-// БАЗА ДАННЫХ С SMART REST
+// ПОЛНАЯ ПРОГРАММА ТРЕНИРОВОК
 const workoutData = {
-    mon: { name: "Push & Pull", rest: 90, ss: [
+    mon: { name: "Upper / Push-Pull", ss: [
         { id: "m1", sets: 5, rest: 120, ex: [
             { name: "Chest Press (Machine)", warm: {w:30, r:10}, work: {w:70, r:8} },
             { name: "Lat Pulldown (Wide)", warm: {w:40, r:10}, work: {w:70, r:8} }
         ]},
         { id: "m2", sets: 4, rest: 90, ex: [
-            { name: "Shoulder Press", work: {w:60, r:8} },
-            { name: "Cable Row", work: {w:80, r:8} }
+            { name: "Shoulder Press (Machine)", work: {w:60, r:8} },
+            { name: "Cable Row (Horiz)", work: {w:80, r:8} }
+        ]},
+        { id: "m3", sets: 4, rest: 60, ex: [
+            { name: "Preacher Curl (Machine)", warm: {w:20, r:10}, work: {w:35, r:8} },
+            { name: "Tricep Kickback (Cable)", warm: {w:5, r:10}, work: {w:10, r:12} }
         ]}
     ]},
-    tue: { name: "Legs & Core", rest: 120, ss: [
+    tue: { name: "Lower / Hypertrophy", ss: [
         { id: "t1", sets: 4, rest: 150, ex: [
-            { name: "Leg Press", warm: {w:80, r:10}, work: {w:140, r:10} },
-            { name: "Leg Curl", work: {w:20, r:10} }
+            { name: "Leg Press (Machine)", warm: {w:80, r:10}, work: {w:140, r:10} },
+            { name: "Standing Leg Curl", work: {w:15, r:10} }
+        ]},
+        { id: "t2", sets: 3, rest: 120, ex: [
+            { name: "Hack Squat", work: {w:90, r:10} },
+            { name: "Leg Extension (Machine)", warm: {w:20, r:10}, work: {w:25, r:10} }
+        ]},
+        { id: "t3", sets: 3, rest: 60, ex: [
+            { name: "DB Hammer Curls", work: {w:12, r:10} },
+            { name: "Cable Tricep Pushdown", work: {w:22, r:10} }
+        ]}
+    ]},
+    thu: { name: "Upper / Incline Focus", ss: [
+        { id: "h1", sets: 4, rest: 120, ex: [
+            { name: "Incline DB Press", warm: {w:14, r:10}, work: {w:22, r:10} },
+            { name: "Lat Pulldown (Machine)", warm: {w:40, r:10}, work: {w:70, r:8} }
+        ]},
+        { id: "h2", sets: 4, rest: 90, ex: [
+            { name: "Supported Row", work: {w:80, r:8} },
+            { name: "Lateral Raise (DB)", work: {w:8, r:15} }
+        ]},
+        { id: "h3", sets: 4, rest: 60, ex: [
+            { name: "Preacher Curl (Machine)", warm: {w:20, r:10}, work: {w:35, r:8} },
+            { name: "Tricep Kickback (Cable)", warm: {w:5, r:10}, work: {w:10, r:12} }
+        ]}
+    ]},
+    fri: { name: "Lower / Mix", ss: [
+        { id: "f1", sets: 4, rest: 150, ex: [
+            { name: "Leg Press (Machine)", warm: {w:80, r:10}, work: {w:140, r:10} },
+            { name: "Standing Leg Curl", work: {w:15, r:10} }
+        ]},
+        { id: "f2", sets: 3, rest: 120, ex: [
+            { name: "Hack Squat", work: {w:90, r:10} },
+            { name: "Leg Extension (Machine)", warm: {w:20, r:10}, work: {w:25, r:10} }
+        ]},
+        { id: "f3", sets: 3, rest: 60, ex: [
+            { name: "DB Hammer Curls", work: {w:12, r:10} },
+            { name: "Overhead Extension", work: {w:22, r:10} }
         ]}
     ]}
-    // Другие дни по аналогии...
 };
 
-let db = JSON.parse(localStorage.getItem('fit_db_v5')) || {
-    history: {},      // { "Ex Name": [70, 72.5, 75] }
-    progress: {},     // { "ss_id": 1 }
-    doneDays: {}      // { "mon": true }
-};
-
+let db = JSON.parse(localStorage.getItem('fit_db_v5')) || { history: {}, progress: {}, doneDays: {} };
 let currentDay = 'mon';
 let selectedWeights = {};
 let timerId = null;
@@ -134,8 +153,6 @@ function setDay(id) {
 function render() {
     const day = workoutData[currentDay];
     document.getElementById('day-title').innerText = day.name;
-    
-    // Tabs state
     document.querySelectorAll('.tab').forEach(t => {
         const dId = t.id.replace('t-', '');
         t.className = `tab ${dId === currentDay ? 'active' : ''} ${db.doneDays[dId] ? 'done' : ''}`;
@@ -217,14 +234,12 @@ function doSet(id, restTime) {
 function startTimer(sec) {
     clearInterval(timerId);
     const ui = document.getElementById('timer-ui');
-    const display = document.getElementById('t-sec');
     ui.style.display = 'flex';
     let left = sec;
-    display.innerText = left;
-    
+    document.getElementById('t-sec').innerText = left;
     timerId = setInterval(() => {
         left--;
-        display.innerText = left;
+        document.getElementById('t-sec').innerText = left;
         if(left <= 0) skipTimer();
     }, 1000);
 }
@@ -237,11 +252,9 @@ function skipTimer() {
 
 function showChart(name) {
     const hist = db.history[name] || [];
-    if(hist.length < 2) { alert("Need at least 2 sessions for chart!"); return; }
-    
+    if(hist.length < 2) { alert("Need at least 2 sessions for progress chart!"); return; }
     document.getElementById('modal').style.display = 'flex';
     document.getElementById('modal-title').innerText = name;
-    
     if(chartObj) chartObj.destroy();
     const ctx = document.getElementById('myChart').getContext('2d');
     chartObj = new Chart(ctx, {
@@ -250,7 +263,7 @@ function showChart(name) {
             labels: hist.map((_,i) => i+1),
             datasets: [{ label: 'Weight (kg)', data: hist, borderColor: '#0A84FF', tension: 0.4, fill: true, backgroundColor: 'rgba(10,132,255,0.1)' }]
         },
-        options: { responsive: true, maintainAspectRatio: false, scales: { y: { grid: { color: '#2C2C2E' } }, x: { display: false } } }
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { grid: { color: '#2C2C2E' }, ticks: { color: '#8E8E93' } }, x: { display: false } }, plugins: { legend: { display: false } } }
     });
 }
 
