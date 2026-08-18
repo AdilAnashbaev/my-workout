@@ -176,6 +176,34 @@
   .session-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed var(--line);}
   .session-row:last-child{border-bottom:none;}
   .session-row .note{display:block;font-size:0.7rem;color:var(--text-dim);font-style:italic;margin-top:2px;}
+
+  /* ---- nutrition screen ---- */
+  .macro-row{display:flex;justify-content:space-between;font-size:0.72rem;color:var(--text-dim);margin-bottom:6px;letter-spacing:0.03em;}
+  .macro-row b{color:var(--text);font-weight:normal;}
+  .macro-block{margin-bottom:14px;}
+  .macro-block:last-child{margin-bottom:0;}
+  .macro-mini-row{display:flex;justify-content:space-between;font-size:0.68rem;color:var(--text-dim);margin-top:10px;}
+  .macro-mini-row span b{display:block;color:var(--text);font-size:0.85rem;margin-top:2px;font-weight:normal;}
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-size:0.62rem;letter-spacing:0.08em;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;}
+  .field input,.field select{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:10px 12px;font-size:0.85rem;font-family:inherit;}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--cyan-dim);}
+  .field .hint{font-size:0.68rem;color:var(--text-dim);margin-top:5px;line-height:1.4;}
+  .settings-toggle{background:none;border:none;color:var(--text-dim);font-size:0.72rem;text-decoration:underline;cursor:pointer;padding:4px 0;margin-bottom:10px;}
+  .meal-row{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px dashed var(--line);gap:8px;}
+  .meal-row:last-child{border-bottom:none;}
+  .meal-row .meal-name{color:var(--text);font-size:0.82rem;}
+  .meal-row .meal-macros{font-size:0.68rem;color:var(--text-dim);margin-top:2px;}
+  .meal-row .meal-time{font-size:0.65rem;color:var(--text-dim);}
+  .meal-del{background:none;border:none;color:var(--text-dim);font-size:0.9rem;cursor:pointer;padding:2px 6px;flex-shrink:0;}
+  .day-total-row{display:flex;justify-content:space-between;padding:6px 0;font-size:0.76rem;color:var(--text-dim);border-bottom:1px dashed var(--line);}
+  .day-total-row:last-child{border-bottom:none;}
+  .day-total-row b{color:var(--text);font-weight:normal;}
+  .nutri-empty{font-size:0.78rem;color:var(--text-dim);text-align:center;padding:10px 0;}
+  .analyzing{display:flex;align-items:center;justify-content:center;gap:10px;padding:20px 0;color:var(--cyan);font-size:0.82rem;letter-spacing:0.05em;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .spinner{width:18px;height:18px;border:2px solid var(--cyan-dim);border-top-color:var(--cyan);border-radius:50%;animation:spin .7s linear infinite;}
+  .error-box{background:rgba(255,92,122,0.08);border:1px solid var(--danger);color:var(--danger);font-size:0.75rem;padding:10px 12px;margin-bottom:12px;line-height:1.5;}
 </style>
 </head>
 <body>
@@ -207,7 +235,10 @@
     </div>
 
     <button class="btn primary big" id="startBtn" disabled style="margin-top:auto;">▶ Начать тренировку</button>
-    <button class="btn ghost" id="progressNavBtn" style="margin-top:10px;">📊 Прогресс</button>
+    <div class="btn-row" style="margin-top:10px;">
+      <button class="btn ghost" id="progressNavBtn">📊 Прогресс</button>
+      <button class="btn ghost" id="nutritionNavBtn">🍽 Питание</button>
+    </div>
 
     <footer class="note">
       История тренировок сохраняется на этом устройстве после завершения тренировки.
@@ -314,6 +345,118 @@
     <div class="panel" style="margin-bottom:0;">
       <span class="label-tag">Недавние тренировки</span>
       <div id="sessionList" style="font-size:0.8rem;color:var(--text-dim);line-height:1.7;"></div>
+    </div>
+  </section>
+
+  <!-- ============ NUTRITION SCREEN ============ -->
+  <section class="screen" id="screen-nutrition">
+    <div class="topbar">
+      <div class="brand">◆ ПИТАНИЕ</div>
+      <button class="btn ghost" id="nutritionHomeBtn" style="padding:8px 12px;font-size:0.65rem;">✕ Домой</button>
+    </div>
+
+    <div class="panel">
+      <span class="label-tag">Сегодня</span>
+      <div class="macro-block">
+        <div class="macro-row"><span>Калории</span><b id="kcalConsumedText">0</b> / <span id="kcalTargetText">0</span> ккал</div>
+        <div class="progress-bar"><div class="progress-fill" id="kcalFill" style="width:0%"></div></div>
+      </div>
+      <div class="macro-block">
+        <div class="macro-row"><span>Белок</span><b id="proteinConsumedText">0</b> / <span id="proteinTargetText">0</span> г</div>
+        <div class="progress-bar"><div class="progress-fill" id="proteinFill" style="width:0%"></div></div>
+      </div>
+      <div class="macro-mini-row">
+        <span>Осталось<b id="kcalRemainingText">—</b></span>
+        <span>Жиры<b id="fatConsumedText">0г</b></span>
+        <span>Углеводы<b id="carbsConsumedText">0г</b></span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="btn-row">
+        <button class="btn primary" id="addPhotoBtn">📸 Фото блюда</button>
+        <button class="btn ghost" id="addManualBtn">✎ Вручную</button>
+      </div>
+      <input type="file" accept="image/*" capture="environment" id="mealPhotoInput" style="display:none;">
+      <div id="nutritionError"></div>
+      <div id="analyzingBox" class="analyzing" style="display:none;"><span class="spinner"></span>Анализирую фото…</div>
+
+      <div id="mealEditBox" style="display:none;margin-top:14px;">
+        <div class="field">
+          <label>Название блюда</label>
+          <input type="text" id="mealNameInput" maxlength="24">
+        </div>
+        <div class="input-row">
+          <div class="input-group"><label>Ккал</label><input type="number" id="mealKcalInput" inputmode="numeric" style="width:100%;background:transparent;border:none;color:var(--text);text-align:center;font-size:1.05rem;"></div>
+          <div class="input-group"><label>Белки г</label><input type="number" id="mealProteinInput" inputmode="numeric" style="width:100%;background:transparent;border:none;color:var(--text);text-align:center;font-size:1.05rem;"></div>
+        </div>
+        <div class="input-row">
+          <div class="input-group"><label>Жиры г</label><input type="number" id="mealFatInput" inputmode="numeric" style="width:100%;background:transparent;border:none;color:var(--text);text-align:center;font-size:1.05rem;"></div>
+          <div class="input-group"><label>Углеводы г</label><input type="number" id="mealCarbsInput" inputmode="numeric" style="width:100%;background:transparent;border:none;color:var(--text);text-align:center;font-size:1.05rem;"></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn ghost" id="mealCancelBtn">Отмена</button>
+          <button class="btn primary" id="mealSaveBtn">✓ Сохранить</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <span class="label-tag">Приёмы пищи сегодня</span>
+      <div id="mealList"></div>
+    </div>
+
+    <div class="panel">
+      <span class="label-tag">Последние дни</span>
+      <div id="nutriDaysList"></div>
+    </div>
+
+    <div class="panel" style="margin-bottom:0;">
+      <button class="settings-toggle" id="nutriSettingsToggle">⚙ Настройки и API-ключ</button>
+      <div id="nutriSettingsPanel" style="display:none;">
+        <div class="field">
+          <label>Ключ Gemini API</label>
+          <input type="text" id="geminiKeyInput" placeholder="Вставьте ваш ключ" autocomplete="off" autocapitalize="off" spellcheck="false">
+          <div class="hint">Хранится только на этом устройстве (не в Telegram-облаке) и используется только для отправки ваших фото блюд в Google Gemini. Получить бесплатный ключ: <span style="color:var(--cyan);">aistudio.google.com/apikey</span></div>
+        </div>
+        <div class="field">
+          <label>Рост (см) — необязательно, для точности</label>
+          <input type="number" id="heightInput" inputmode="numeric" placeholder="напр. 178">
+        </div>
+        <div class="field">
+          <label>Возраст — необязательно, для точности</label>
+          <input type="number" id="ageInput" inputmode="numeric" placeholder="напр. 29">
+        </div>
+        <div class="field">
+          <label>Уровень активности</label>
+          <select id="activityInput">
+            <option value="sedentary">Малоподвижный</option>
+            <option value="light">Лёгкая активность</option>
+            <option value="moderate" selected>Умеренная (силовые 3-5 раз/нед)</option>
+            <option value="active">Высокая активность</option>
+            <option value="veryActive">Очень высокая активность</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Дефицит калорий для похудения</label>
+          <select id="deficitInput">
+            <option value="10">10% — мягкий</option>
+            <option value="15" selected>15% — умеренный (рекомендуется)</option>
+            <option value="20">20% — активный</option>
+            <option value="25">25% — агрессивный</option>
+          </select>
+          <div class="hint">Норма считается по весу тела (из раздела «Прогресс»), росту/возрасту и активности, затем уменьшается на этот процент. Умеренный дефицит помогает терять жир, сохраняя мышцы при силовых тренировках.</div>
+        </div>
+        <div class="field">
+          <label>Ручной лимит калорий — необязательно</label>
+          <input type="number" id="kcalOverrideInput" inputmode="numeric" placeholder="оставьте пустым для автоматического расчёта">
+        </div>
+        <div class="field">
+          <label>Ручная цель по белку (г) — необязательно</label>
+          <input type="number" id="proteinOverrideInput" inputmode="numeric" placeholder="оставьте пустым для автоматического расчёта">
+        </div>
+        <button class="btn primary big" id="nutriSettingsSaveBtn">Сохранить настройки</button>
+      </div>
     </div>
   </section>
 
@@ -557,6 +700,114 @@ async function saveBodyLogEntry(kg){
   bodyLog.sort((a,b) => a.t - b.t);
   if (bodyLog.length > BODYLOG_CAP) bodyLog = bodyLog.slice(bodyLog.length - BODYLOG_CAP);
   await storageSet(BODYLOG_KEY, JSON.stringify(bodyLog));
+}
+
+/* ============================================================
+   NUTRITION STORAGE
+   Photo-based calorie/macro logging. A day's meals can easily blow past
+   the 4096-byte single-key limit if kept in one growing array (unlike
+   workout history, food logging can be 3-6+ entries every single day),
+   so this is SHARDED: one small CloudStorage key per calendar day
+   (ariseNutriD_<dayKey>), plus a tiny manifest key listing which days
+   have a shard so we know what to load. Telegram allows up to 1024 keys
+   per user, so a rolling window of NUTRI_DAYS_CAP day-shards is nowhere
+   close to that ceiling.
+   The Gemini API key itself is intentionally NOT run through storageGet/
+   storageSet — it never touches Telegram's CloudStorage (or any server
+   of ours), it lives only in this device's localStorage.
+   ============================================================ */
+const NUTRI_SETTINGS_KEY = 'ariseNutriSettings';
+const NUTRI_DAYS_KEY = 'ariseNutriDays';
+const NUTRI_DAYS_CAP = 120; // ~4 months of rolling daily shards
+const MEAL_NAME_MAX = 24;
+const GEMINI_KEY_LS = 'ariseGeminiKey'; // localStorage only — never synced anywhere
+const DEFAULT_BODYWEIGHT_KG = 81; // fallback if no body-weight check-in logged yet
+const ACTIVITY_MULTIPLIERS = { sedentary:1.2, light:1.375, moderate:1.55, active:1.725, veryActive:1.9 };
+
+let nutriSettings = { h:null, age:null, act:'moderate', def:15, kcalOverride:null, proteinOverride:null, model:'gemini-3.7-flash' };
+let nutriDays = []; // manifest: sorted array of dayKeys that have a shard on file
+let todayNutriEntries = []; // today's shard, loaded eagerly at startup so the home teaser + nutrition screen are instant
+
+function getGeminiKey(){
+  try{ return (localStorage.getItem(GEMINI_KEY_LS) || '').trim(); }catch(e){ return ''; }
+}
+function setGeminiKey(key){
+  try{ localStorage.setItem(GEMINI_KEY_LS, key.trim()); }catch(e){}
+}
+
+async function loadNutriDayShard(dayKey){
+  const raw = await storageGet(`ariseNutriD_${dayKey}`);
+  try{ return raw ? JSON.parse(raw) : []; }catch(e){ return []; }
+}
+async function saveNutriDayShard(dayKey, entries){
+  await storageSet(`ariseNutriD_${dayKey}`, JSON.stringify(entries));
+}
+async function ensureDayInManifest(dayKey){
+  if (nutriDays.includes(dayKey)) return;
+  nutriDays.push(dayKey);
+  nutriDays.sort();
+  while (nutriDays.length > NUTRI_DAYS_CAP){
+    const evicted = nutriDays.shift();
+    try{ await saveNutriDayShard(evicted, []); }catch(e){} // reclaim the byte budget; key slot itself is cheap to keep
+  }
+  await storageSet(NUTRI_DAYS_KEY, JSON.stringify(nutriDays));
+}
+
+async function loadNutritionState(){
+  // All 3 reads in a single Promise.all — chaining the today-shard read after the first two
+  // (like an earlier version of this file did for its own keys) would let a worst-case
+  // CloudStorage hang stack serially instead of staying capped at one ~1.5s timeout.
+  const [rawSettings, rawDays, rawToday] = await Promise.all([
+    storageGet(NUTRI_SETTINGS_KEY),
+    storageGet(NUTRI_DAYS_KEY),
+    storageGet(`ariseNutriD_${dayKeyOf(Date.now())}`),
+  ]);
+  try{ if (rawSettings) nutriSettings = { ...nutriSettings, ...JSON.parse(rawSettings) }; }catch(e){}
+  try{ nutriDays = rawDays ? JSON.parse(rawDays) : []; }catch(e){ nutriDays = []; }
+  try{ todayNutriEntries = rawToday ? JSON.parse(rawToday) : []; }catch(e){ todayNutriEntries = []; }
+}
+async function saveNutriSettings(){
+  await storageSet(NUTRI_SETTINGS_KEY, JSON.stringify(nutriSettings));
+}
+
+async function addMealEntry(entry){
+  const dayKey = dayKeyOf(entry.t);
+  todayNutriEntries.push(entry);
+  await ensureDayInManifest(dayKey);
+  await saveNutriDayShard(dayKey, todayNutriEntries);
+}
+async function deleteMealEntry(idx){
+  todayNutriEntries.splice(idx, 1);
+  await saveNutriDayShard(dayKeyOf(Date.now()), todayNutriEntries);
+}
+
+function latestBodyWeightKg(){
+  return bodyLog.length ? bodyLog[bodyLog.length - 1].kg : DEFAULT_BODYWEIGHT_KG;
+}
+
+// Calorie target: Mifflin-St Jeor BMR (male formula) × activity multiplier when height+age are
+// known for accuracy, otherwise a simpler bodyweight-only heuristic (~33 kcal/kg is a common
+// estimate for moderately active lifters) — then a moderate deficit for fat loss while lifting,
+// since an aggressive cut risks losing the muscle this whole program is built to add.
+function computeKcalTarget(){
+  if (nutriSettings.kcalOverride) return Math.round(nutriSettings.kcalOverride);
+  const w = latestBodyWeightKg();
+  const act = ACTIVITY_MULTIPLIERS[nutriSettings.act] || ACTIVITY_MULTIPLIERS.moderate;
+  let tdee;
+  if (nutriSettings.h && nutriSettings.age){
+    const bmr = 10*w + 6.25*nutriSettings.h - 5*nutriSettings.age + 5;
+    tdee = bmr * act;
+  } else {
+    tdee = w * 33;
+  }
+  const deficitPct = (typeof nutriSettings.def === 'number' ? nutriSettings.def : 15) / 100;
+  return Math.round((tdee * (1 - deficitPct)) / 25) * 25;
+}
+// Protein target: ~2g/kg bodyweight — the upper end of the evidence-based range for lifters
+// in a caloric deficit, to protect muscle while cutting.
+function computeProteinTarget(){
+  if (nutriSettings.proteinOverride) return Math.round(nutriSettings.proteinOverride);
+  return Math.round(latestBodyWeightKg() * 2.0);
 }
 
 /* ============================================================
@@ -1264,6 +1515,299 @@ document.getElementById('logWeightBtn').onclick = async () => {
 };
 
 /* ============================================================
+   NUTRITION SCREEN — photo calorie estimation via Gemini, daily
+   calorie/protein budget, meal log, recent-days overview
+   ============================================================ */
+function todayTotals(){
+  return todayNutriEntries.reduce((acc, e) => {
+    acc.kcal += e.k; acc.protein += e.p; acc.fat += e.f; acc.carbs += e.c;
+    return acc;
+  }, { kcal:0, protein:0, fat:0, carbs:0 });
+}
+
+function dateFromDayKey(dayKey){
+  const [y, m, d] = dayKey.split('-').map(Number);
+  return new Date(y, m, d);
+}
+
+function renderNutritionTotals(){
+  const totals = todayTotals();
+  const kcalTarget = computeKcalTarget();
+  const proteinTarget = computeProteinTarget();
+
+  document.getElementById('kcalConsumedText').textContent = Math.round(totals.kcal).toLocaleString('ru-RU');
+  document.getElementById('kcalTargetText').textContent = kcalTarget.toLocaleString('ru-RU');
+  document.getElementById('kcalFill').style.width = Math.min(100, Math.round((totals.kcal / kcalTarget) * 100)) + '%';
+  const remaining = Math.round(kcalTarget - totals.kcal);
+  const remEl = document.getElementById('kcalRemainingText');
+  remEl.textContent = (remaining >= 0 ? remaining : ('+' + (-remaining))) + ' ккал';
+  remEl.style.color = remaining < 0 ? 'var(--danger)' : 'var(--text)';
+
+  document.getElementById('proteinConsumedText').textContent = Math.round(totals.protein);
+  document.getElementById('proteinTargetText').textContent = proteinTarget;
+  document.getElementById('proteinFill').style.width = Math.min(100, Math.round((totals.protein / proteinTarget) * 100)) + '%';
+
+  document.getElementById('fatConsumedText').textContent = Math.round(totals.fat) + 'г';
+  document.getElementById('carbsConsumedText').textContent = Math.round(totals.carbs) + 'г';
+}
+
+function renderMealList(){
+  const wrap = document.getElementById('mealList');
+  if (!todayNutriEntries.length){
+    wrap.innerHTML = `<div class="nutri-empty">Пока ничего не записано сегодня.</div>`;
+    return;
+  }
+  wrap.innerHTML = todayNutriEntries.map((e, i) => `
+    <div class="meal-row">
+      <div>
+        <div class="meal-name">${e.n}</div>
+        <div class="meal-macros">${Math.round(e.k)} ккал · Б${Math.round(e.p)} Ж${Math.round(e.f)} У${Math.round(e.c)}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span class="meal-time">${new Date(e.t).toLocaleTimeString('ru-RU', { hour:'2-digit', minute:'2-digit' })}</span>
+        <button class="meal-del" data-idx="${i}">✕</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function renderNutriDaysList(){
+  const wrap = document.getElementById('nutriDaysList');
+  wrap.innerHTML = `<div class="nutri-empty">Загрузка…</div>`;
+  const todayKey = dayKeyOf(Date.now());
+  const prevKeys = nutriDays.filter(k => k !== todayKey).slice(-6).reverse();
+  if (!prevKeys.length){
+    wrap.innerHTML = `<div class="nutri-empty">Больше дней пока нет — история появится по мере записи приёмов пищи.</div>`;
+    return;
+  }
+  const shards = await Promise.all(prevKeys.map(k => loadNutriDayShard(k).catch(() => [])));
+  const target = computeKcalTarget();
+  wrap.innerHTML = prevKeys.map((k, i) => {
+    const total = shards[i].reduce((s, e) => s + (e.k || 0), 0);
+    const label = dateFromDayKey(k).toLocaleDateString('ru-RU', { day:'numeric', month:'short' });
+    const over = total > target;
+    return `<div class="day-total-row"><span>${label}</span><b style="${over ? 'color:var(--gold);' : ''}">${Math.round(total).toLocaleString('ru-RU')} / ${target.toLocaleString('ru-RU')} ккал</b></div>`;
+  }).join('');
+}
+
+function renderNutritionTeaser(){
+  const btn = document.getElementById('nutritionNavBtn');
+  if (!btn) return;
+  const totals = todayTotals();
+  const target = computeKcalTarget();
+  const remaining = Math.round(target - totals.kcal);
+  const subText = remaining >= 0 ? `${remaining} ккал осталось` : `+${-remaining} ккал сверх нормы`;
+  btn.innerHTML = `🍽 Питание<span style="display:block;font-size:0.58rem;color:var(--text-dim);text-transform:none;letter-spacing:0.02em;margin-top:3px;">${subText}</span>`;
+}
+
+function showMealEditBox(vals){
+  const v = vals || {};
+  document.getElementById('mealNameInput').value = v.name || '';
+  document.getElementById('mealKcalInput').value = v.kcal || '';
+  document.getElementById('mealProteinInput').value = v.protein || '';
+  document.getElementById('mealFatInput').value = v.fat || '';
+  document.getElementById('mealCarbsInput').value = v.carbs || '';
+  document.getElementById('mealEditBox').style.display = 'block';
+}
+function hideMealEditBox(){
+  document.getElementById('mealEditBox').style.display = 'none';
+}
+function showNutritionError(msg){
+  document.getElementById('nutritionError').innerHTML = msg ? `<div class="error-box">${msg}</div>` : '';
+}
+
+function renderNutritionScreen(){
+  renderNutritionTotals();
+  renderMealList();
+  renderNutriDaysList();
+  document.getElementById('geminiKeyInput').value = getGeminiKey();
+  document.getElementById('heightInput').value = nutriSettings.h || '';
+  document.getElementById('ageInput').value = nutriSettings.age || '';
+  document.getElementById('activityInput').value = nutriSettings.act || 'moderate';
+  document.getElementById('deficitInput').value = String(nutriSettings.def != null ? nutriSettings.def : 15);
+  document.getElementById('kcalOverrideInput').value = nutriSettings.kcalOverride || '';
+  document.getElementById('proteinOverrideInput').value = nutriSettings.proteinOverride || '';
+}
+
+// Downscale + JPEG-compress the photo client-side before it ever leaves the device — keeps the
+// upload small/fast on mobile data and well within Gemini's request size limits. Returns bare
+// base64 (no "data:image/jpeg;base64," prefix — the API wants just the payload).
+function fileToResizedBase64Jpeg(file, maxDim, quality){
+  maxDim = maxDim || 768; quality = quality || 0.72;
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('READ_FAIL'));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('IMG_DECODE_FAIL'));
+      img.onload = () => {
+        let { width, height } = img;
+        if (width >= height && width > maxDim){ height = Math.round(height * maxDim / width); width = maxDim; }
+        else if (height > width && height > maxDim){ width = Math.round(width * maxDim / height); height = maxDim; }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality).split(',')[1]);
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+const GEMINI_FOOD_PROMPT = 'Ты — ассистент по подсчёту калорий. Посмотри на фото еды на тарелке и оцени её примерную пищевую ценность как одно блюдо (сумма всех продуктов на фото). Дай короткое название блюда по-русски (до 24 символов), общую калорийность (ккал) и содержание белков, жиров и углеводов в граммах. Если еды на фото не видно, укажи kcal=0 и name="Не распознано". Дай наиболее вероятную единственную оценку, а не диапазон. Отвечай только JSON по заданной схеме, без пояснений.';
+
+// Talks directly to Google's Gemini API from the phone — there is no backend of ours in the
+// middle. Every failure mode (missing key, offline, bad response shape) is caught and tagged
+// with a `code` so the caller can show a specific message and fall back to manual entry instead
+// of leaving the user stuck.
+async function analyzeFoodPhoto(base64Jpeg){
+  const key = getGeminiKey();
+  if (!key){ const err = new Error('NO_KEY'); err.code = 'NO_KEY'; throw err; }
+  const model = nutriSettings.model || 'gemini-3.7-flash';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`;
+  const body = {
+    contents: [{ parts: [
+      { text: GEMINI_FOOD_PROMPT },
+      { inline_data: { mime_type: 'image/jpeg', data: base64Jpeg } },
+    ]}],
+    generationConfig: {
+      responseMimeType: 'application/json',
+      responseSchema: {
+        type: 'OBJECT',
+        properties: {
+          name: { type: 'STRING' },
+          kcal: { type: 'NUMBER' },
+          protein_g: { type: 'NUMBER' },
+          fat_g: { type: 'NUMBER' },
+          carbs_g: { type: 'NUMBER' },
+        },
+        required: ['name', 'kcal', 'protein_g', 'fat_g', 'carbs_g'],
+      },
+    },
+  };
+  let res;
+  try{
+    res = await fetch(url, { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(body) });
+  }catch(e){ const err = new Error('NETWORK'); err.code = 'NETWORK'; throw err; }
+  if (!res.ok){
+    let detail = '';
+    try{ detail = (await res.text()).slice(0, 180); }catch(e){}
+    const err = new Error(`HTTP ${res.status}: ${detail}`); err.code = 'API'; throw err;
+  }
+  let data;
+  try{ data = await res.json(); }catch(e){ const err = new Error('BAD_JSON'); err.code = 'PARSE'; throw err; }
+  const text = data && data.candidates && data.candidates[0] && data.candidates[0].content &&
+    data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
+  if (!text){ const err = new Error('EMPTY'); err.code = 'PARSE'; throw err; }
+  let parsed;
+  try{ parsed = JSON.parse(text); }catch(e){ const err = new Error('BAD_JSON'); err.code = 'PARSE'; throw err; }
+  return {
+    name: String(parsed.name || 'Блюдо').slice(0, MEAL_NAME_MAX),
+    kcal: Math.max(0, Math.round(Number(parsed.kcal) || 0)),
+    protein: Math.max(0, Math.round(Number(parsed.protein_g) || 0)),
+    fat: Math.max(0, Math.round(Number(parsed.fat_g) || 0)),
+    carbs: Math.max(0, Math.round(Number(parsed.carbs_g) || 0)),
+  };
+}
+
+document.getElementById('nutritionNavBtn').onclick = () => { renderNutritionScreen(); showScreen('screen-nutrition'); };
+document.getElementById('nutritionHomeBtn').onclick = () => showScreen('screen-home');
+
+document.getElementById('nutriSettingsToggle').onclick = () => {
+  const panel = document.getElementById('nutriSettingsPanel');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+};
+
+document.getElementById('addPhotoBtn').onclick = () => {
+  if (!getGeminiKey()){
+    showNutritionError('Сначала укажите API-ключ Gemini в настройках ниже — без него фото не распознать.');
+    document.getElementById('nutriSettingsPanel').style.display = 'block';
+    return;
+  }
+  showNutritionError('');
+  document.getElementById('mealPhotoInput').click();
+};
+
+document.getElementById('addManualBtn').onclick = () => {
+  showNutritionError('');
+  showMealEditBox();
+};
+
+document.getElementById('mealPhotoInput').onchange = async (e) => {
+  const file = e.target.files[0];
+  e.target.value = ''; // reset so picking the same file again still fires change next time
+  if (!file) return;
+  showNutritionError('');
+  hideMealEditBox();
+  document.getElementById('analyzingBox').style.display = 'flex';
+  try{
+    const base64 = await fileToResizedBase64Jpeg(file);
+    const result = await analyzeFoodPhoto(base64);
+    document.getElementById('analyzingBox').style.display = 'none';
+    showMealEditBox(result);
+  }catch(err){
+    document.getElementById('analyzingBox').style.display = 'none';
+    const messages = {
+      NO_KEY: 'Не указан API-ключ Gemini — добавьте его в настройках ниже.',
+      NETWORK: 'Не удалось связаться с Gemini (нет интернета, или запрос заблокирован). Можно ввести значения вручную.',
+      PARSE: 'Gemini прислал неожиданный ответ. Можно ввести значения вручную.',
+      API: `Gemini вернул ошибку: ${err.message}. Можно ввести значения вручную.`,
+    };
+    showNutritionError(messages[err.code] || `Не удалось распознать фото: ${err.message}. Можно ввести значения вручную.`);
+    showMealEditBox(); // fall back to manual entry so a bad photo/response never blocks logging
+  }
+};
+
+document.getElementById('mealCancelBtn').onclick = () => { hideMealEditBox(); showNutritionError(''); };
+
+document.getElementById('mealSaveBtn').onclick = async () => {
+  const name = document.getElementById('mealNameInput').value.trim().slice(0, MEAL_NAME_MAX) || 'Блюдо';
+  const kcal = Math.max(0, Math.round(parseFloat(document.getElementById('mealKcalInput').value) || 0));
+  const protein = Math.max(0, Math.round(parseFloat(document.getElementById('mealProteinInput').value) || 0));
+  const fat = Math.max(0, Math.round(parseFloat(document.getElementById('mealFatInput').value) || 0));
+  const carbs = Math.max(0, Math.round(parseFloat(document.getElementById('mealCarbsInput').value) || 0));
+  try{
+    await addMealEntry({ t: Date.now(), k: kcal, p: protein, f: fat, c: carbs, n: name });
+  }catch(e){}
+  hideMealEditBox();
+  showNutritionError('');
+  renderNutritionTotals();
+  renderMealList();
+  renderNutritionTeaser();
+  vibrate(20);
+};
+
+document.getElementById('mealList').addEventListener('click', async (e) => {
+  const btn = e.target.closest('.meal-del');
+  if (!btn) return;
+  const idx = parseInt(btn.dataset.idx);
+  try{ await deleteMealEntry(idx); }catch(err){}
+  renderMealList();
+  renderNutritionTotals();
+  renderNutritionTeaser();
+});
+
+document.getElementById('nutriSettingsSaveBtn').onclick = async () => {
+  setGeminiKey(document.getElementById('geminiKeyInput').value);
+  const h = parseFloat(document.getElementById('heightInput').value);
+  const age = parseInt(document.getElementById('ageInput').value);
+  nutriSettings.h = h > 0 ? h : null;
+  nutriSettings.age = age > 0 ? age : null;
+  nutriSettings.act = document.getElementById('activityInput').value;
+  nutriSettings.def = parseInt(document.getElementById('deficitInput').value);
+  const kcalOv = parseFloat(document.getElementById('kcalOverrideInput').value);
+  const proteinOv = parseFloat(document.getElementById('proteinOverrideInput').value);
+  nutriSettings.kcalOverride = kcalOv > 0 ? kcalOv : null;
+  nutriSettings.proteinOverride = proteinOv > 0 ? proteinOv : null;
+  try{ await saveNutriSettings(); }catch(e){}
+  renderNutritionTotals();
+  renderNutriDaysList();
+  renderNutritionTeaser();
+  vibrate(20);
+};
+
+/* ============================================================
    UTIL: vibration + beep
    ============================================================ */
 function vibrate(pattern){
@@ -1304,15 +1848,16 @@ async function initApp(){
     }catch(e){}
   }
 
-  // Each load is already hardened (timeout + try/catch inside storageGet) — but with 4
+  // Each load is already hardened (timeout + try/catch inside storageGet) — but with 5
   // separate keys now, awaiting them one after another would let a worst-case hang stack
-  // up to 4x the per-call timeout before the screen ever renders. Load them in parallel
+  // up to 5x the per-call timeout before the screen ever renders. Load them in parallel
   // instead, so the worst case stays ~1.5s no matter how many keys there are.
   await Promise.all([
     loadHistory().catch(() => { history = []; }),
     loadProgress().catch(() => { progress = {}; }),
     loadBodyLog().catch(() => { bodyLog = []; }),
     loadMeta().catch(() => { meta = { n: 0 }; }),
+    loadNutritionState().catch(() => { nutriDays = []; todayNutriEntries = []; }),
   ]);
   try{
     // one-time backfill: someone upgrading from before the lifetime counter existed
@@ -1323,6 +1868,7 @@ async function initApp(){
   renderDayGrid();
   renderHistoryPanel();
   renderRankPill();
+  renderNutritionTeaser();
 
   const statusEl = document.getElementById('storageStatus');
   if (statusEl){
