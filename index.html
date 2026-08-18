@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ARISE — Training System</title>
+<title>ARISE — Система тренировок</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   :root{
@@ -184,47 +184,47 @@
   <!-- ============ HOME SCREEN ============ -->
   <section class="screen active" id="screen-home">
     <div class="topbar">
-      <div class="brand">◆ <b>ARISE</b> SYSTEM</div>
-      <button class="level-pill" id="playerTag" style="cursor:pointer;">HUNTER · 81KG</button>
+      <div class="brand">◆ <b>ARISE</b> СИСТЕМА</div>
+      <button class="level-pill" id="playerTag" style="cursor:pointer;">ОХОТНИК · 81КГ</button>
     </div>
 
     <div class="hero">
-      <h1 class="glow" style="color:var(--cyan)">TRAINING GATE</h1>
-      <p>Select today's dungeon. Back / Shoulders / Arms priority.</p>
+      <h1 class="glow" style="color:var(--cyan)">ВРАТА ТРЕНИРОВКИ</h1>
+      <p>Выберите сегодняшнее подземелье. Приоритет: спина / плечи / руки.</p>
     </div>
 
     <div class="panel" id="historyPanel" style="display:none;">
-      <span class="label-tag">Last Session</span>
+      <span class="label-tag">Последняя тренировка</span>
       <div id="historyList" style="font-size:0.82rem;color:var(--text-dim);line-height:1.6;"></div>
     </div>
 
-    <span class="label-tag">Choose Program</span>
+    <span class="label-tag">Выберите программу</span>
     <div class="day-grid" id="dayGrid"></div>
 
     <div class="panel" id="previewPanel" style="display:none;">
-      <span class="label-tag" id="previewLabel">Preview</span>
+      <span class="label-tag" id="previewLabel">Обзор</span>
       <div id="previewList" style="font-size:0.8rem;color:var(--text-dim);line-height:1.7;"></div>
     </div>
 
-    <button class="btn primary big" id="startBtn" disabled style="margin-top:auto;">▶ Start Session</button>
-    <button class="btn ghost" id="progressNavBtn" style="margin-top:10px;">📊 Progress</button>
+    <button class="btn primary big" id="startBtn" disabled style="margin-top:auto;">▶ Начать тренировку</button>
+    <button class="btn ghost" id="progressNavBtn" style="margin-top:10px;">📊 Прогресс</button>
 
     <footer class="note">
-      Session history saves on this device once you finish a workout.
+      История тренировок сохраняется на этом устройстве после завершения тренировки.
       <span id="storageStatus"></span>
-      <br><a href="#" id="clearHistoryLink" style="color:var(--text-dim);text-decoration:underline;">Clear saved history</a>
+      <br><a href="#" id="clearHistoryLink" style="color:var(--text-dim);text-decoration:underline;">Очистить сохранённую историю</a>
     </footer>
   </section>
 
   <!-- ============ SESSION SCREEN ============ -->
   <section class="screen" id="screen-session">
     <div class="topbar">
-      <div class="brand" id="sessionDayLabel">◆ DAY A</div>
-      <button class="btn ghost" id="quitBtn" style="padding:8px 12px;font-size:0.65rem;">✕ End</button>
+      <div class="brand" id="sessionDayLabel">◆ ДЕНЬ A</div>
+      <button class="btn ghost" id="quitBtn" style="padding:8px 12px;font-size:0.65rem;">✕ Выход</button>
     </div>
 
     <div class="progress-wrap">
-      <div class="progress-top"><span id="progressText">Step 1 / 20</span><span id="progressPct">0%</span></div>
+      <div class="progress-top"><span id="progressText">Шаг 1 / 20</span><span id="progressPct">0%</span></div>
       <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
     </div>
 
@@ -236,13 +236,13 @@
       <div class="set-pill-row" id="setPills"></div>
 
       <div class="target-row">
-        <div>TARGET REPS<b id="targetReps">—</b></div>
-        <div>TARGET WEIGHT<b id="targetWeight">—</b></div>
+        <div>ЦЕЛЕВЫЕ ПОВТОРЫ<b id="targetReps">—</b></div>
+        <div>ЦЕЛЕВОЙ ВЕС<b id="targetWeight">—</b></div>
       </div>
 
       <div class="input-row">
         <div class="input-group">
-          <label>Weight (kg)</label>
+          <label>Вес (кг)</label>
           <div class="stepper">
             <button id="wMinus">–</button>
             <input type="number" id="weightInput" inputmode="decimal">
@@ -250,7 +250,7 @@
           </div>
         </div>
         <div class="input-group">
-          <label>Reps</label>
+          <label>Повторы</label>
           <div class="stepper">
             <button id="rMinus">–</button>
             <input type="number" id="repsInput" inputmode="numeric">
@@ -259,7 +259,7 @@
         </div>
       </div>
 
-      <button class="btn primary big" id="logSetBtn">✓ Log Set</button>
+      <button class="btn primary big" id="logSetBtn">✓ Записать подход</button>
       <div class="next-preview" id="nextPreview"></div>
     </div>
   </section>
@@ -267,17 +267,17 @@
   <!-- ============ PROGRESS SCREEN ============ -->
   <section class="screen" id="screen-progress">
     <div class="topbar">
-      <div class="brand">◆ PROGRESS</div>
-      <button class="btn ghost" id="progressHomeBtn" style="padding:8px 12px;font-size:0.65rem;">✕ Home</button>
+      <div class="brand">◆ ПРОГРЕСС</div>
+      <button class="btn ghost" id="progressHomeBtn" style="padding:8px 12px;font-size:0.65rem;">✕ Домой</button>
     </div>
 
     <div class="panel">
-      <span class="label-tag">Hunter Rank</span>
+      <span class="label-tag">Ранг охотника</span>
       <div style="display:flex;align-items:center;gap:16px;">
         <div id="rankLetter" class="glow" style="font-size:2.4rem;color:var(--cyan);line-height:1;">E</div>
         <div style="flex:1;">
           <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--text-dim);margin-bottom:5px;">
-            <span id="rankLevelText">LV 0</span><span id="rankNextText"></span>
+            <span id="rankLevelText">УР 0</span><span id="rankNextText"></span>
           </div>
           <div class="progress-bar"><div class="progress-fill" id="rankFill" style="width:0%"></div></div>
         </div>
@@ -285,41 +285,41 @@
     </div>
 
     <div class="panel">
-      <span class="label-tag">This Week</span>
+      <span class="label-tag">Эта неделя</span>
       <div id="weekDots" style="display:flex;justify-content:space-between;"></div>
     </div>
 
     <div class="panel">
-      <span class="label-tag">Total Volume Trend</span>
+      <span class="label-tag">Динамика общего объёма</span>
       <div id="tonnageChart"></div>
     </div>
 
     <div class="panel">
-      <span class="label-tag">Key Lift Progress</span>
+      <span class="label-tag">Прогресс по упражнению</span>
       <select id="exercisePicker" style="width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:9px;margin-bottom:10px;font-size:0.8rem;"></select>
       <div id="exerciseChart"></div>
     </div>
 
     <div class="panel">
-      <span class="label-tag">Body Weight</span>
+      <span class="label-tag">Вес тела</span>
       <div style="display:flex;gap:10px;margin-bottom:10px;">
-        <input type="number" id="bodyWeightInput" placeholder="kg" inputmode="decimal"
+        <input type="number" id="bodyWeightInput" placeholder="кг" inputmode="decimal"
           style="flex:1;min-width:0;background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:10px;text-align:center;font-size:0.95rem;">
-        <button class="btn primary" id="logWeightBtn" style="flex:1;">Log</button>
+        <button class="btn primary" id="logWeightBtn" style="flex:1;">Записать</button>
       </div>
       <div id="bodyWeightSummary" style="font-size:0.76rem;color:var(--text-dim);margin-bottom:6px;"></div>
       <div id="bodyWeightChart"></div>
     </div>
 
     <div class="panel" style="margin-bottom:0;">
-      <span class="label-tag">Recent Sessions</span>
+      <span class="label-tag">Недавние тренировки</span>
       <div id="sessionList" style="font-size:0.8rem;color:var(--text-dim);line-height:1.7;"></div>
     </div>
   </section>
 
   <!-- ============ REST OVERLAY ============ -->
   <div id="restOverlay">
-    <div class="rest-label" id="restLabel">Rest</div>
+    <div class="rest-label" id="restLabel">Отдых</div>
     <div class="rest-ring">
       <svg width="220" height="220">
         <circle cx="110" cy="110" r="100" stroke="#1c2c46" stroke-width="6" fill="none"/>
@@ -329,23 +329,23 @@
       </svg>
       <div class="time" id="restTime">0:00</div>
     </div>
-    <div class="rest-next">Next: <b id="restNextName">—</b></div>
+    <div class="rest-next">Далее: <b id="restNextName">—</b></div>
     <div class="btn-row" style="width:100%;max-width:280px;">
-      <button class="btn ghost" id="restAdd" style="flex:1;">+15s</button>
-      <button class="btn primary" id="restSkip" style="flex:1;">Skip ▶</button>
+      <button class="btn ghost" id="restAdd" style="flex:1;">+15с</button>
+      <button class="btn primary" id="restSkip" style="flex:1;">Пропустить ▶</button>
     </div>
   </div>
 
   <!-- ============ CELEBRATION ============ -->
   <div id="celebration">
     <div id="burstLayer"></div>
-    <div class="quest-title glow" id="questTitle">QUEST CLEARED</div>
-    <div class="quest-sub" id="questSub">Back / Shoulders / Arms — Day A complete</div>
+    <div class="quest-title glow" id="questTitle">КВЕСТ ВЫПОЛНЕН</div>
+    <div class="quest-sub" id="questSub">Спина / Плечи / Руки — День A завершён</div>
     <div class="stat-lines" id="statLines"></div>
     <div class="next-preview" id="nextUpPreview" style="margin-bottom:16px;"></div>
-    <input type="text" id="sessionNoteInput" placeholder="Add a note (optional) — e.g. 'shoulder felt off'" maxlength="60"
+    <input type="text" id="sessionNoteInput" placeholder="Заметка (необязательно) — напр. «плечо побаливало»" maxlength="30"
       style="width:100%;max-width:280px;background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:10px 12px;font-size:0.82rem;margin-bottom:16px;text-align:center;">
-    <button class="btn primary big" id="returnBtn" style="width:100%;max-width:280px;">Return to Gate</button>
+    <button class="btn primary big" id="returnBtn" style="width:100%;max-width:280px;">Вернуться к вратам</button>
   </div>
 
 </div>
@@ -355,60 +355,60 @@
    PROGRAM DATA
    ============================================================ */
 const PROGRAM = {
-  A: { label:'Day A', name:'Vertical Pull + Press, Arms', tags:'Back · Shoulders · Biceps · Triceps · Core', blocks:[
-    { type:'pair', ssLabel:'Superset A — vertical pull + vertical push',
-      primary:{ name:'Lat Pulldown', sub:'Wide/neutral grip, chest up, pull to upper chest', warmup:{reps:'12-15', weight:40, rest:60}, work:{count:2, reps:'8-10', weight:70} },
-      secondary:{ name:'Machine Shoulder Press', sub:'Controlled, no hard lockout — antagonist to the pulldown', warmup:{reps:'12-15', weight:20, rest:60}, work:{count:2, reps:'8-10', weight:45} },
+  A: { label:'День A', name:'Вертикальная тяга + жим, руки', tags:'Спина · Плечи · Бицепс · Трицепс · Пресс', blocks:[
+    { type:'pair', ssLabel:'Суперсет A — вертикальная тяга + вертикальный жим',
+      primary:{ name:'Тяга верхнего блока', sub:'Широкий/нейтральный хват, грудь вверх, тяга к верху груди', warmup:{reps:'12-15', weight:40, rest:60}, work:{count:2, reps:'8-10', weight:70} },
+      secondary:{ name:'Жим плеч в тренажёре', sub:'Подконтрольно, без жёсткого замка — антагонист тяге блока', warmup:{reps:'12-15', weight:20, rest:60}, work:{count:2, reps:'8-10', weight:45} },
       transitionRest:25, roundRest:100 },
-    { type:'pair', ssLabel:'Superset B — biceps + triceps',
-      primary:{ name:'EZ Bar Curl', sub:'Strict, no swinging', warmup:{reps:'12-15', weight:20, rest:50}, work:{count:2, reps:'8-10', weight:35} },
-      secondary:{ name:'Triceps Rope Pushdown', sub:'Elbows pinned to sides, full extension', warmup:{reps:'12-15', weight:15, rest:45}, work:{count:2, reps:'10-12', weight:30} },
+    { type:'pair', ssLabel:'Суперсет B — бицепс + трицепс',
+      primary:{ name:'Подъём EZ-штанги на бицепс', sub:'Строго, без раскачки', warmup:{reps:'12-15', weight:20, rest:50}, work:{count:2, reps:'8-10', weight:35} },
+      secondary:{ name:'Разгибание рук на трицепс с канатом', sub:'Локти прижаты к корпусу, полное разгибание', warmup:{reps:'12-15', weight:15, rest:45}, work:{count:2, reps:'10-12', weight:30} },
       transitionRest:20, roundRest:70 },
-    { type:'single', name:'Cable/Machine Lateral Raise', sub:'Side delts — straight sets, biggest lever for width',
+    { type:'single', name:'Разведение рук в стороны (блок/тренажёр)', sub:'Средние дельты — обычные подходы, главный рычаг для ширины плеч',
       warmup:null, work:{count:2, reps:'12-15', weight:8, rest:70} },
-    { type:'single', name:'Cable Crunch / Hanging Knee Raise', sub:'Core — controlled, full contraction',
+    { type:'single', name:'Скручивания на блоке / Подъём коленей в висе', sub:'Пресс — подконтрольно, полное сокращение',
       warmup:null, work:{count:2, reps:'12-15', weight:20, rest:50} },
   ]},
-  B: { label:'Day B', name:'Horizontal Pull + Press, Arms', tags:'Back · Chest · Biceps · Triceps · Core', blocks:[
-    { type:'pair', ssLabel:'Superset A — horizontal pull + horizontal push',
-      primary:{ name:'Chest-Supported Row', sub:'Neutral grip, squeeze shoulder blades, no torso swing', warmup:{reps:'12-15', weight:30, rest:60}, work:{count:2, reps:'8-10', weight:55} },
-      secondary:{ name:'Machine Chest Press', sub:'Safe alone — antagonist to the row, your one chest slot for the week', warmup:{reps:'12-15', weight:25, rest:60}, work:{count:2, reps:'8-10', weight:50} },
+  B: { label:'День B', name:'Горизонтальная тяга + жим, руки', tags:'Спина · Грудь · Бицепс · Трицепс · Пресс', blocks:[
+    { type:'pair', ssLabel:'Суперсет A — горизонтальная тяга + горизонтальный жим',
+      primary:{ name:'Тяга в тренажёре с упором в грудь', sub:'Нейтральный хват, сведение лопаток, без раскачки корпуса', warmup:{reps:'12-15', weight:30, rest:60}, work:{count:2, reps:'8-10', weight:55} },
+      secondary:{ name:'Жим от груди в тренажёре', sub:'Безопасно в одиночку — антагонист тяге, ваш единственный слот на грудь на неделе', warmup:{reps:'12-15', weight:25, rest:60}, work:{count:2, reps:'8-10', weight:50} },
       transitionRest:25, roundRest:100 },
-    { type:'pair', ssLabel:'Superset B — biceps + triceps',
-      primary:{ name:'Cable Rope Hammer Curl', sub:'Forearm / brachialis emphasis', warmup:null, work:{count:2, reps:'10-12', weight:15} },
-      secondary:{ name:'Overhead Cable Triceps Ext.', sub:'Long-head emphasis', warmup:null, work:{count:2, reps:'10-12', weight:20} },
+    { type:'pair', ssLabel:'Суперсет B — бицепс + трицепс',
+      primary:{ name:'Молотковые сгибания на блоке с канатом', sub:'Акцент на предплечья / плечевую мышцу', warmup:null, work:{count:2, reps:'10-12', weight:15} },
+      secondary:{ name:'Разгибание рук на трицепс над головой (блок)', sub:'Акцент на длинную головку', warmup:null, work:{count:2, reps:'10-12', weight:20} },
       transitionRest:20, roundRest:70 },
-    { type:'single', name:'Face Pull', sub:'Rope attachment, rear delt / upper back',
+    { type:'single', name:'Тяга к лицу', sub:'Канатная рукоять, задние дельты / верх спины',
       warmup:null, work:{count:2, reps:'12-15', weight:15, rest:70} },
-    { type:'single', name:'Plank / Weighted Cable Crunch', sub:'Core — anti-extension',
+    { type:'single', name:'Планка / Скручивания на блоке с отягощением', sub:'Пресс — анти-разгибание',
       warmup:null, work:{count:2, reps:'12-15', weight:15, rest:50} },
   ]},
-  C: { label:'Day C', name:'Vertical Pull + Press, Arms', tags:'Back · Shoulders · Biceps · Triceps · Core', blocks:[
-    { type:'pair', ssLabel:'Superset A — vertical pull + vertical push',
-      primary:{ name:'Assisted Pull-Up / Close-Grip Pulldown', sub:'Different angle from Day A’s wide pulldown', warmup:{reps:'12-15', weight:30, rest:60}, work:{count:2, reps:'8-10', weight:60} },
-      secondary:{ name:'Seated DB Press / Smith Press', sub:'Dumbbells: drop to sides if you fail — antagonist to the pull-up/pulldown', warmup:{reps:'12-15', weight:14, rest:60}, work:{count:2, reps:'8-10', weight:24} },
+  C: { label:'День C', name:'Вертикальная тяга + жим, руки', tags:'Спина · Плечи · Бицепс · Трицепс · Пресс', blocks:[
+    { type:'pair', ssLabel:'Суперсет A — вертикальная тяга + вертикальный жим',
+      primary:{ name:'Подтягивания с ассистом / Тяга блока узким хватом', sub:'Другой угол по сравнению с широкой тягой блока в День A', warmup:{reps:'12-15', weight:30, rest:60}, work:{count:2, reps:'8-10', weight:60} },
+      secondary:{ name:'Жим гантелей сидя / Жим в Смите', sub:'Гантели: можно уронить в сторону при отказе — антагонист подтягиваниям/тяге блока', warmup:{reps:'12-15', weight:14, rest:60}, work:{count:2, reps:'8-10', weight:24} },
       transitionRest:25, roundRest:100 },
-    { type:'pair', ssLabel:'Superset B — biceps + triceps',
-      primary:{ name:'Incline DB / Cable Curl', sub:'Long-head bicep stretch, different stimulus from the EZ bar', warmup:{reps:'12-15', weight:8, rest:50}, work:{count:2, reps:'8-10', weight:14} },
-      secondary:{ name:'Dip Machine / Close-Grip Pushdown', sub:'Self-limiting, safe to failure alone', warmup:{reps:'12-15', weight:20, rest:45}, work:{count:2, reps:'10-12', weight:40} },
+    { type:'pair', ssLabel:'Суперсет B — бицепс + трицепс',
+      primary:{ name:'Сгибания на бицепс на наклонной скамье (гантели/блок)', sub:'Растяжение длинной головки бицепса, другой стимул по сравнению с EZ-штангой', warmup:{reps:'12-15', weight:8, rest:50}, work:{count:2, reps:'8-10', weight:14} },
+      secondary:{ name:'Тренажёр для отжиманий на брусьях / Разгибание блока узким хватом', sub:'Самоограничивающее упражнение, безопасно выполнять до отказа в одиночку', warmup:{reps:'12-15', weight:20, rest:45}, work:{count:2, reps:'10-12', weight:40} },
       transitionRest:20, roundRest:75 },
-    { type:'single', name:'Cable Lateral Raise', sub:'Different angle from Day A’s machine',
+    { type:'single', name:'Разведение рук в стороны на блоке', sub:'Другой угол по сравнению с тренажёром в День A',
       warmup:null, work:{count:2, reps:'12-15', weight:8, rest:70} },
-    { type:'single', name:'Hanging Knee Raise / Cable Woodchopper', sub:'Obliques',
+    { type:'single', name:'Подъём коленей в висе / Дровосек на блоке', sub:'Косые мышцы живота',
       warmup:null, work:{count:2, reps:'12-15', weight:0, rest:50} },
   ]},
-  D: { label:'Day D', name:'Horizontal Pull + Legs, Arms', tags:'Back · Legs · Biceps · Rear Delt', blocks:[
-    { type:'pair', ssLabel:'Superset A — paired for time (zero muscle overlap)',
-      primary:{ name:'Single-Arm DB Row', sub:'Bench-supported, unilateral — solo-safe', warmup:{reps:'12-15', weight:12, rest:50}, work:{count:2, reps:'8-10 /side', weight:26} },
-      secondary:{ name:'Leg Press', sub:'Mechanical stop, no spotter needed — your one leg slot for the week', warmup:{reps:'12-15', weight:60, rest:60}, work:{count:2, reps:'10-12', weight:140} },
+  D: { label:'День D', name:'Горизонтальная тяга + ноги, руки', tags:'Спина · Ноги · Бицепс · Задние дельты', blocks:[
+    { type:'pair', ssLabel:'Суперсет A — в паре для экономии времени (без пересечения мышц)',
+      primary:{ name:'Тяга гантели одной рукой', sub:'С упором на скамью, односторонне — безопасно в одиночку', warmup:{reps:'12-15', weight:12, rest:50}, work:{count:2, reps:'8-10 /сторона', weight:26} },
+      secondary:{ name:'Жим ногами', sub:'Механический упор, страховщик не нужен — ваш единственный слот на ноги на неделе', warmup:{reps:'12-15', weight:60, rest:60}, work:{count:2, reps:'10-12', weight:140} },
       transitionRest:25, roundRest:100 },
-    { type:'pair', ssLabel:'Superset B — paired for time (zero muscle overlap)',
-      primary:{ name:'Reverse-Grip Curl', sub:'Forearm / brachioradialis emphasis', warmup:null, work:{count:2, reps:'10-12', weight:20} },
-      secondary:{ name:'Seated/Lying Hamstring Curl', sub:'Balances the quad-dominant leg press', warmup:null, work:{count:2, reps:'10-12', weight:35} },
+    { type:'pair', ssLabel:'Суперсет B — в паре для экономии времени (без пересечения мышц)',
+      primary:{ name:'Сгибания обратным хватом', sub:'Акцент на предплечья / плечелучевую мышцу', warmup:null, work:{count:2, reps:'10-12', weight:20} },
+      secondary:{ name:'Сгибание ног сидя/лёжа', sub:'Балансирует жим ногами, где доминируют квадрицепсы', warmup:null, work:{count:2, reps:'10-12', weight:35} },
       transitionRest:20, roundRest:80 },
-    { type:'single', name:'Reverse Pec Deck / Rear Delt Fly', sub:'Rear delt, different tool than Day B’s face pull',
+    { type:'single', name:'Обратная бабочка / Разведение на задние дельты', sub:'Задние дельты, другой инструмент по сравнению с тягой к лицу в День B',
       warmup:null, work:{count:2, reps:'12-15', weight:18, rest:70} },
-    { type:'single', name:'Standing Calf Raise', sub:'Quick lower-body balance add-on',
+    { type:'single', name:'Подъём на носки стоя', sub:'Быстрое дополнение для баланса нижней части тела',
       warmup:null, work:{count:2, reps:'12-15', weight:60, rest:45} },
   ]},
 };
@@ -421,7 +421,7 @@ const DAY_ORDER = ['A','B','C','D'];
 let selectedDay = null;
 let steps = [];          // flattened runtime steps for the session
 let currentStepIdx = 0;
-let sessionLog = [];      // {ex, label, weight, reps}
+let sessionLog = [];      // {ex, label, kind, weight, reps}
 let restTimerId = null;
 let restRemaining = 0;
 let restTotal = 0;
@@ -453,13 +453,15 @@ const HISTORY_KEY = 'ariseHistory';
 const PROGRESS_KEY = 'ariseProgress';
 const BODYLOG_KEY = 'ariseBodyLog';
 const META_KEY = 'ariseMeta';
-// Verified worst case (every single record carrying a full-length note): 30 records × 60-char
-// note ≈ 3.7KB, comfortably under the 4096-byte limit. history itself is a display/chart window,
+// Verified worst case (every single record carrying a full-length note, Cyrillic chars are
+// 2 bytes each in UTF-8): 30 records × 30-char note ≈ 3.8KB, comfortably under the 4096-byte
+// limit. NOTE_MAX is kept lower than the old English-only value specifically because Cyrillic
+// text costs double the bytes per character. history itself is a display/chart window,
 // NOT the source of truth for lifetime session count — see `meta` below for that.
 const HISTORY_CAP = 30;
 const PROGRESS_HIST_CAP = 6; // weight snapshots kept per exercise, for the trend chart — kept small since this multiplies by ~24 exercises in one storage key
 const BODYLOG_CAP = 150;   // ~20 bytes/entry, one per day → ~5 months of daily entries
-const NOTE_MAX = 60;
+const NOTE_MAX = 30;
 const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
 let storageMode = 'memory';
 let memoryStore = {};
@@ -565,6 +567,16 @@ function dayKeyOf(ts){
   return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; // local-calendar-day bucket
 }
 
+// Russian plural helper: ruPlural(5, ['день','дня','дней']) -> 'дней'
+function ruPlural(n, forms){
+  n = Math.abs(n) % 100;
+  const n1 = n % 10;
+  if (n > 10 && n < 20) return forms[2];
+  if (n1 > 1 && n1 < 5) return forms[1];
+  if (n1 === 1) return forms[0];
+  return forms[2];
+}
+
 // "8-10" -> {lo:8,hi:10}; "8-10 /side" -> same, suffix stripped; "12-15" -> {lo:12,hi:15}
 function parseRepRange(repsStr){
   const m = String(repsStr).match(/(\d+)\s*-\s*(\d+)/);
@@ -638,10 +650,10 @@ function buildSteps(dayKey){
     if (block.type === 'single'){
       const rw = resolvedWeights(block.name, block);
       if (block.warmup){
-        out.push({ ex:block.name, sub:block.sub, label:'Warm-up', reps:block.warmup.reps, weight:rw.warmupWeight, rest:block.warmup.rest, group:null, blockIdx:bIdx });
+        out.push({ ex:block.name, sub:block.sub, label:'Разминка', kind:'warmup', reps:block.warmup.reps, weight:rw.warmupWeight, rest:block.warmup.rest, group:null, blockIdx:bIdx });
       }
       for (let i=0; i<block.work.count; i++){
-        out.push({ ex:block.name, sub:block.sub, label:`Set ${i+1}`, reps:block.work.reps, weight:rw.workTarget, adjusted:rw.adjusted,
+        out.push({ ex:block.name, sub:block.sub, label:`Подход ${i+1}`, kind:'work', reps:block.work.reps, weight:rw.workTarget, adjusted:rw.adjusted,
           rest: i < block.work.count-1 ? block.work.rest : block.work.rest, group:null, blockIdx:bIdx, lastOfBlock:i===block.work.count-1 });
       }
     } else if (block.type === 'pair'){
@@ -649,19 +661,19 @@ function buildSteps(dayKey){
       const rwP = resolvedWeights(p.name, p), rwS = resolvedWeights(s.name, s);
       // warm up each of the pair's two movements once, back to back
       if (p.warmup){
-        out.push({ ex:p.name, sub:p.sub, label:'Warm-up', reps:p.warmup.reps, weight:rwP.warmupWeight,
+        out.push({ ex:p.name, sub:p.sub, label:'Разминка', kind:'warmup', reps:p.warmup.reps, weight:rwP.warmupWeight,
           rest: block.transitionRest, group:'pair', pairPartner:s.name, blockIdx:bIdx, ssLabel:block.ssLabel });
       }
       if (s.warmup){
-        out.push({ ex:s.name, sub:s.sub, label:'Warm-up', reps:s.warmup.reps, weight:rwS.warmupWeight,
+        out.push({ ex:s.name, sub:s.sub, label:'Разминка', kind:'warmup', reps:s.warmup.reps, weight:rwS.warmupWeight,
           rest: block.roundRest, group:'pair', pairPartner:p.name, blockIdx:bIdx, ssLabel:block.ssLabel });
       }
       // then alternate working sets between the two
       for (let i=0; i<p.work.count; i++){
-        out.push({ ex:p.name, sub:p.sub, label:`Set ${i+1}`, reps:p.work.reps, weight:rwP.workTarget, adjusted:rwP.adjusted,
+        out.push({ ex:p.name, sub:p.sub, label:`Подход ${i+1}`, kind:'work', reps:p.work.reps, weight:rwP.workTarget, adjusted:rwP.adjusted,
           rest: block.transitionRest, group:'pair', pairPartner:s.name, blockIdx:bIdx, ssLabel:block.ssLabel });
         const isLastRound = i === p.work.count-1;
-        out.push({ ex:s.name, sub:s.sub, label:`Set ${i+1}`, reps:s.work.reps, weight:rwS.workTarget, adjusted:rwS.adjusted,
+        out.push({ ex:s.name, sub:s.sub, label:`Подход ${i+1}`, kind:'work', reps:s.work.reps, weight:rwS.workTarget, adjusted:rwS.adjusted,
           rest: block.roundRest, group:'pair', pairPartner:p.name, blockIdx:bIdx, lastOfBlock:isLastRound, ssLabel:block.ssLabel });
       }
     }
@@ -678,7 +690,7 @@ function buildSteps(dayKey){
 function updateProgressFromSession(sessionLog){
   const byEx = {};
   sessionLog.forEach(s => {
-    if (!s.label.startsWith('Set')) return; // skip warm-ups
+    if (s.kind !== 'work') return; // skip warm-ups
     (byEx[s.ex] = byEx[s.ex] || []).push(s);
   });
   Object.keys(byEx).forEach(name => {
@@ -741,7 +753,7 @@ function renderDayGrid(){
     const d = PROGRAM[key];
     const btn = document.createElement('button');
     btn.className = 'day-btn' + (key === sug ? ' suggested' : '');
-    btn.dataset.badge = isRotation ? 'NEXT UP' : 'TODAY';
+    btn.dataset.badge = isRotation ? 'ДАЛЕЕ' : 'СЕГОДНЯ';
     btn.innerHTML = `<b>${d.label}</b><span>${d.name}</span>`;
     btn.onclick = () => selectDay(key, btn);
     grid.appendChild(btn);
@@ -751,11 +763,11 @@ function renderDayGrid(){
 function timeAgo(ts){
   const diffMs = Date.now() - ts;
   const days = Math.floor(diffMs / 86400000);
-  if (days <= 0) return 'today';
-  if (days === 1) return 'yesterday';
-  if (days < 7) return days + ' days ago';
+  if (days <= 0) return 'сегодня';
+  if (days === 1) return 'вчера';
+  if (days < 7) return `${days} ${ruPlural(days, ['день','дня','дней'])} назад`;
   const weeks = Math.floor(days / 7);
-  return weeks === 1 ? '1 week ago' : weeks + ' weeks ago';
+  return weeks === 1 ? 'неделю назад' : `${weeks} ${ruPlural(weeks, ['неделя','недели','недель'])} назад`;
 }
 
 function renderHistoryPanel(){
@@ -766,16 +778,16 @@ function renderHistoryPanel(){
   panel.style.display = 'block';
   document.getElementById('historyList').innerHTML = `
     <b style="color:var(--cyan)">${d ? d.label : last.d} — ${d ? d.name : ''}</b><br>
-    ${timeAgo(last.t)} · ${last.s} sets · ${last.v.toLocaleString()} kg volume<br>
+    ${timeAgo(last.t)} · ${last.s} подх. · ${last.v.toLocaleString('ru-RU')} кг объём<br>
     ${last.n ? `<span style="color:var(--text);font-style:italic;">"${last.n}"</span><br>` : ''}
-    <span style="color:var(--text-dim);font-size:0.72rem;">${history.length} session${history.length===1?'':'s'} logged total</span>
+    <span style="color:var(--text-dim);font-size:0.72rem;">Всего записано тренировок: ${history.length}</span>
   `;
 }
 
 function renderRankPill(){
   const r = computeRank(meta.n);
   const pill = document.getElementById('playerTag');
-  if (pill) pill.textContent = `RANK ${r.rank} · LV ${r.level}`;
+  if (pill) pill.textContent = `РАНГ ${r.rank} · УР ${r.level}`;
 }
 
 function selectDay(key, btnEl){
@@ -790,7 +802,7 @@ function selectDay(key, btnEl){
   document.getElementById('previewLabel').textContent = `${day.label} — ${day.name}`;
   document.getElementById('previewList').innerHTML = day.blocks.map(b => {
     if (b.type === 'single') return `• ${b.name}`;
-    return `• ${b.primary.name} + ${b.secondary.name} <span style="color:var(--purple)">(superset)</span>`;
+    return `• ${b.primary.name} + ${b.secondary.name} <span style="color:var(--purple)">(суперсет)</span>`;
   }).join('<br>');
 }
 
@@ -823,15 +835,15 @@ function renderStep(){
 
   // progress
   const pct = Math.round((currentStepIdx / steps.length) * 100);
-  document.getElementById('progressText').textContent = `Step ${currentStepIdx+1} / ${steps.length}`;
+  document.getElementById('progressText').textContent = `Шаг ${currentStepIdx+1} / ${steps.length}`;
   document.getElementById('progressPct').textContent = pct + '%';
   document.getElementById('progressFill').style.width = pct + '%';
 
   // superset tag
   const tagWrap = document.getElementById('supersetTagWrap');
-  const ssShort = step.ssLabel ? step.ssLabel.split('—')[0].trim() : 'SUPERSET';
+  const ssShort = step.ssLabel ? step.ssLabel.split('—')[0].trim() : 'СУПЕРСЕТ';
   tagWrap.innerHTML = step.group === 'pair'
-    ? `<span class="superset-tag" title="${step.ssLabel || ''}">⚡ ${ssShort}${step.pairPartner ? ' · with ' + step.pairPartner : ''}</span>`
+    ? `<span class="superset-tag" title="${step.ssLabel || ''}">⚡ ${ssShort}${step.pairPartner ? ' · с ' + step.pairPartner : ''}</span>`
     : '';
 
   document.getElementById('exName').textContent = step.ex;
@@ -842,17 +854,17 @@ function renderStep(){
 
   document.getElementById('targetReps').textContent = step.reps;
   document.getElementById('targetWeight').innerHTML = step.weight > 0
-    ? step.weight + ' kg' + (step.adjusted ? ' <span style="color:var(--gold);font-size:0.6rem;">↑ adjusted</span>' : '')
-    : 'bodyweight';
+    ? step.weight + ' кг' + (step.adjusted ? ' <span style="color:var(--gold);font-size:0.6rem;">↑ скорректировано</span>' : '')
+    : 'вес тела';
 
   document.getElementById('weightInput').value = step.weight;
   document.getElementById('repsInput').value = parseInt(step.reps) || step.reps;
 
   // next preview
   const next = steps[currentStepIdx+1];
-  document.getElementById('nextPreview').textContent = next ? `Next up: ${next.ex} — ${next.label}` : 'Final set of the day.';
+  document.getElementById('nextPreview').textContent = next ? `Далее: ${next.ex} — ${next.label}` : 'Финальный подход дня.';
 
-  document.getElementById('logSetBtn').textContent = (currentStepIdx === steps.length-1) ? '✓ Log Final Set' : '✓ Log Set';
+  document.getElementById('logSetBtn').textContent = (currentStepIdx === steps.length-1) ? '✓ Записать финальный подход' : '✓ Записать подход';
 }
 
 function renderSetPills(currentStep){
@@ -884,7 +896,7 @@ document.getElementById('logSetBtn').onclick = () => {
   const step = steps[currentStepIdx];
   const loggedWeight = parseFloat(document.getElementById('weightInput').value) || 0;
   const loggedReps = parseInt(document.getElementById('repsInput').value) || 0;
-  sessionLog.push({ ex: step.ex, label: step.label, weight: loggedWeight, reps: loggedReps });
+  sessionLog.push({ ex: step.ex, label: step.label, kind: step.kind, weight: loggedWeight, reps: loggedReps });
   vibrate(25);
 
   const isLast = currentStepIdx === steps.length - 1;
@@ -914,7 +926,7 @@ const CIRC = 2 * Math.PI * 100; // ~628
 function startRest(seconds, nextStep){
   restTotal = seconds;
   restRemaining = seconds;
-  document.getElementById('restLabel').textContent = nextStep && nextStep.group === 'pair' ? 'Transition' : 'Rest';
+  document.getElementById('restLabel').textContent = nextStep && nextStep.group === 'pair' ? 'Переход' : 'Отдых';
   document.getElementById('restNextName').textContent = nextStep ? `${nextStep.ex} — ${nextStep.label}` : '—';
   document.getElementById('restCircle').setAttribute('stroke-dasharray', CIRC);
   document.getElementById('restCircle').setAttribute('stroke-dashoffset', 0);
@@ -972,14 +984,14 @@ async function finishSession(){
   const exercisesHit = new Set(sessionLog.map(s => s.ex)).size;
   const rankBefore = computeRank(meta.n);
 
-  document.getElementById('questTitle').textContent = 'QUEST CLEARED';
+  document.getElementById('questTitle').textContent = 'КВЕСТ ВЫПОЛНЕН';
   document.getElementById('questSub').textContent = `${day.label} — ${day.name}`;
 
   const statLines = [
-    ['Duration', durationMin + ' min'],
-    ['Sets Logged', totalSets],
-    ['Exercises', exercisesHit],
-    ['Total Volume', Math.round(tonnage).toLocaleString() + ' kg'],
+    ['Длительность', durationMin + ' мин'],
+    ['Подходов', totalSets],
+    ['Упражнений', exercisesHit],
+    ['Общий объём', Math.round(tonnage).toLocaleString('ru-RU') + ' кг'],
   ];
   const statWrap = document.getElementById('statLines');
   statWrap.innerHTML = statLines.map((l,i) =>
@@ -1004,8 +1016,8 @@ async function finishSession(){
   const rankAfter = computeRank(meta.n);
   const rankedUp = rankAfter.rank !== rankBefore.rank;
   document.getElementById('nextUpPreview').innerHTML = [
-    rankedUp ? `<div style="color:var(--gold);margin-bottom:8px;">⬆ RANK UP — welcome to Rank ${rankAfter.rank}</div>` : '',
-    nextDay ? `Next up: <b>${nextDay.label} — ${nextDay.name}</b>` : '',
+    rankedUp ? `<div style="color:var(--gold);margin-bottom:8px;">⬆ ПОВЫШЕНИЕ РАНГА — добро пожаловать в Ранг ${rankAfter.rank}</div>` : '',
+    nextDay ? `Далее: <b>${nextDay.label} — ${nextDay.name}</b>` : '',
   ].join('');
 
   spawnBurst();
@@ -1056,7 +1068,7 @@ document.getElementById('returnBtn').onclick = async () => {
 
 document.getElementById('clearHistoryLink').onclick = async (e) => {
   e.preventDefault();
-  if (!confirm('Clear all saved session history on this device? This can\'t be undone.')) return;
+  if (!confirm('Очистить всю сохранённую историю тренировок на этом устройстве? Это действие нельзя отменить.')) return;
   await clearHistory();
   renderDayGrid();
   renderHistoryPanel();
@@ -1084,9 +1096,9 @@ function renderLineChart(containerId, points, opts={}){
   const el = document.getElementById(containerId);
   if (!el) return;
   const unit = opts.unit || '';
-  const fmt = opts.format || (v => Math.round(v).toLocaleString());
+  const fmt = opts.format || (v => Math.round(v).toLocaleString('ru-RU'));
   if (!points || points.length < 2){
-    el.innerHTML = `<div style="font-size:0.78rem;color:var(--text-dim);padding:16px 4px;text-align:center;">${opts.emptyText || 'Not enough data yet — this fills in as you log more.'}</div>`;
+    el.innerHTML = `<div style="font-size:0.78rem;color:var(--text-dim);padding:16px 4px;text-align:center;">${opts.emptyText || 'Пока недостаточно данных — график заполнится по мере тренировок.'}</div>`;
     return;
   }
   const W = 300, H = 100, padL = 6, padR = 6, padT = 14, padB = 8;
@@ -1121,7 +1133,7 @@ function renderLineChart(containerId, points, opts={}){
       </div>
       <div id="${tipId}" style="display:none;position:absolute;top:0;left:50%;transform:translate(-50%,-100%);background:var(--panel2);border:1px solid var(--cyan-dim);padding:4px 8px;font-size:0.7rem;color:var(--text);white-space:nowrap;pointer-events:none;z-index:2;"></div>
     </div>
-    ${opts.capped ? `<div style="font-size:0.62rem;color:var(--text-dim);margin-top:4px;">showing the last ${points.length}</div>` : ''}
+    ${opts.capped ? `<div style="font-size:0.62rem;color:var(--text-dim);margin-top:4px;">показаны последние ${points.length}</div>` : ''}
   `;
   const tip = document.getElementById(tipId);
   el.querySelectorAll('.chart-hit').forEach(hit => {
@@ -1138,15 +1150,15 @@ function renderLineChart(containerId, points, opts={}){
 function renderRankCard(){
   const r = computeRank(meta.n);
   document.getElementById('rankLetter').textContent = r.rank;
-  document.getElementById('rankLevelText').textContent = `LV ${r.level}`;
-  document.getElementById('rankNextText').textContent = r.next ? `Next: Rank ${r.next} in ${r.toNext}` : 'Max rank reached';
+  document.getElementById('rankLevelText').textContent = `УР ${r.level}`;
+  document.getElementById('rankNextText').textContent = r.next ? `Далее: Ранг ${r.next} через ${r.toNext}` : 'Максимальный ранг достигнут';
   document.getElementById('rankFill').style.width = r.pct + '%';
 }
 
 function renderWeekDots(){
   const wrap = document.getElementById('weekDots');
   wrap.innerHTML = '';
-  const labels = ['M','T','W','T','F','S','S'];
+  const labels = ['П','В','С','Ч','П','С','В'];
   const now = new Date();
   const dow = now.getDay(); // 0 Sun..6 Sat
   const mondayOffset = dow === 0 ? -6 : 1 - dow; // days to subtract to reach this week's Monday
@@ -1173,11 +1185,11 @@ function renderTonnageChart(){
   const shown = history.slice(-N);
   const points = shown.map(h => ({
     y: h.v,
-    label: new Date(h.t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+    label: new Date(h.t).toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' }),
   }));
   renderLineChart('tonnageChart', points, {
-    unit: ' kg', capped: history.length > N,
-    emptyText: 'Finish a couple more sessions to see your volume trend here.',
+    unit: ' кг', capped: history.length > N,
+    emptyText: 'Проведите ещё пару тренировок, чтобы увидеть здесь динамику объёма.',
   });
 }
 
@@ -1195,36 +1207,36 @@ function renderExerciseChart(){
   const sel = document.getElementById('exercisePicker');
   const name = sel.value;
   const p = progress[name];
-  const points = (p && p.h ? p.h : []).map((w, i) => ({ y: w, label: `snapshot ${i + 1}` }));
+  const points = (p && p.h ? p.h : []).map((w, i) => ({ y: w, label: `снимок ${i + 1}` }));
   renderLineChart('exerciseChart', points, {
-    unit: ' kg',
-    emptyText: 'No logged sets for this exercise yet — pick another, or come back after training it.',
+    unit: ' кг',
+    emptyText: 'Пока нет записанных подходов по этому упражнению — выберите другое или вернитесь после тренировки.',
   });
 }
 
 function renderBodyWeightSection(){
   const summary = document.getElementById('bodyWeightSummary');
   if (!bodyLog.length){
-    summary.textContent = 'Log your first check-in to start a trend.';
+    summary.textContent = 'Добавьте первое измерение, чтобы начать отслеживать динамику.';
   } else {
     const first = bodyLog[0], last = bodyLog[bodyLog.length - 1];
     const delta = last.kg - first.kg;
-    summary.innerHTML = `Started at ${first.kg}kg → now ${last.kg}kg <span style="color:${delta<=0?'var(--gold)':'var(--text)'}">(${delta>=0?'+':''}${delta.toFixed(1)}kg)</span>`;
+    summary.innerHTML = `Начало: ${first.kg}кг → сейчас ${last.kg}кг <span style="color:${delta<=0?'var(--gold)':'var(--text)'}">(${delta>=0?'+':''}${delta.toFixed(1)}кг)</span>`;
     document.getElementById('bodyWeightInput').value = last.kg;
   }
-  const points = bodyLog.map(e => ({ y: e.kg, label: new Date(e.t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) }));
-  renderLineChart('bodyWeightChart', points, { unit: 'kg', emptyText: 'Log a couple of check-ins to see your trend here.' });
+  const points = bodyLog.map(e => ({ y: e.kg, label: new Date(e.t).toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' }) }));
+  renderLineChart('bodyWeightChart', points, { unit: 'кг', emptyText: 'Добавьте пару измерений, чтобы увидеть здесь динамику.' });
 }
 
 function renderSessionList(){
   const wrap = document.getElementById('sessionList');
   const recent = history.slice(-10).reverse();
-  if (!recent.length){ wrap.innerHTML = `<span style="font-size:0.78rem;">No sessions logged yet.</span>`; return; }
+  if (!recent.length){ wrap.innerHTML = `<span style="font-size:0.78rem;">Пока нет записанных тренировок.</span>`; return; }
   wrap.innerHTML = recent.map(h => {
     const d = PROGRAM[h.d];
     return `<div class="session-row">
       <span><b style="color:var(--text);">${d ? d.label : h.d}</b> · ${timeAgo(h.t)}${h.n ? `<span class="note">"${h.n}"</span>` : ''}</span>
-      <span>${h.s} sets · ${h.v.toLocaleString()}kg</span>
+      <span>${h.s} подх. · ${h.v.toLocaleString('ru-RU')}кг</span>
     </div>`;
   }).join('');
 }
@@ -1314,9 +1326,9 @@ async function initApp(){
 
   const statusEl = document.getElementById('storageStatus');
   if (statusEl){
-    statusEl.textContent = storageMode === 'telegram' ? '(synced via Telegram)'
-      : storageMode === 'local' ? '(this browser only)'
-      : '(not saving — private/sandboxed view)';
+    statusEl.textContent = storageMode === 'telegram' ? '(синхронизировано через Telegram)'
+      : storageMode === 'local' ? '(только в этом браузере)'
+      : '(не сохраняется — приватный режим)';
   }
 }
 initApp();
