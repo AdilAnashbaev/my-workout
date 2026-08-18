@@ -204,6 +204,21 @@
   @keyframes spin{to{transform:rotate(360deg);}}
   .spinner{width:18px;height:18px;border:2px solid var(--cyan-dim);border-top-color:var(--cyan);border-radius:50%;animation:spin .7s linear infinite;}
   .error-box{background:rgba(255,92,122,0.08);border:1px solid var(--danger);color:var(--danger);font-size:0.75rem;padding:10px 12px;margin-bottom:12px;line-height:1.5;}
+  .insight-box{background:rgba(255,209,102,0.06);border:1px solid var(--gold);color:var(--text);font-size:0.75rem;padding:10px 12px;margin-bottom:14px;line-height:1.5;}
+  .insight-box b{color:var(--gold);font-weight:normal;}
+  .portion-btn{flex:1;background:var(--panel2);border:1px solid var(--line);color:var(--text-dim);padding:8px 4px;font-size:0.72rem;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer;font-family:inherit;}
+  .portion-btn.active{border-color:var(--cyan);color:var(--cyan);background:rgba(62,232,255,0.08);}
+
+  /* ---- body photo progress ---- */
+  .photo-compare-row{display:flex;gap:10px;}
+  .photo-compare-col{flex:1;text-align:center;}
+  .photo-compare-col img{width:100%;border:1px solid var(--line);display:block;background:var(--panel2);}
+  .photo-compare-col .cap{font-size:0.65rem;color:var(--text-dim);margin-top:4px;}
+  .photo-entry{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px dashed var(--line);}
+  .photo-entry:last-child{border-bottom:none;}
+  .photo-entry img{width:52px;height:52px;object-fit:cover;border:1px solid var(--line);flex-shrink:0;background:var(--panel2);}
+  .photo-entry .meta{flex:1;font-size:0.72rem;color:var(--text-dim);min-width:0;}
+  .photo-entry .meta b{color:var(--text);font-weight:normal;display:block;font-size:0.8rem;margin-bottom:2px;}
 </style>
 </head>
 <body>
@@ -342,6 +357,18 @@
       <div id="bodyWeightChart"></div>
     </div>
 
+    <div class="panel">
+      <span class="label-tag">Фото-прогресс (визуальная оценка ИИ)</span>
+      <div class="hint" style="margin-bottom:10px;">Грубая прикидка, не точное измерение. Для честного сравнения — одинаковый ракурс, освещение и минимум одежды каждый раз, в одно время суток.</div>
+      <button class="btn primary" id="addBodyPhotoBtn" style="width:100%;">📸 Добавить фото</button>
+      <input type="file" accept="image/*" capture="environment" id="bodyPhotoInput" style="display:none;">
+      <div id="bodyPhotoError"></div>
+      <div id="bodyPhotoAnalyzing" class="analyzing" style="display:none;"><span class="spinner"></span>Анализирую фото…</div>
+      <div id="bodyFatChart" style="margin-top:14px;"></div>
+      <div id="bodyPhotoCompare" style="margin-top:10px;"></div>
+      <div id="bodyPhotoList" style="margin-top:10px;"></div>
+    </div>
+
     <div class="panel" style="margin-bottom:0;">
       <span class="label-tag">Недавние тренировки</span>
       <div id="sessionList" style="font-size:0.8rem;color:var(--text-dim);line-height:1.7;"></div>
@@ -386,6 +413,16 @@
           <label>Название блюда</label>
           <input type="text" id="mealNameInput" maxlength="24">
         </div>
+        <div class="field">
+          <label>Порция</label>
+          <div class="btn-row" style="gap:6px;">
+            <button type="button" class="portion-btn active" data-pct="100">100%</button>
+            <button type="button" class="portion-btn" data-pct="75">75%</button>
+            <button type="button" class="portion-btn" data-pct="50">50%</button>
+            <button type="button" class="portion-btn" data-pct="25">25%</button>
+          </div>
+          <div class="hint">Пересчитывает калории и БЖУ от исходной оценки — если на фото вся тарелка, а съели вы только часть.</div>
+        </div>
         <div class="input-row">
           <div class="input-group"><label>Ккал</label><input type="number" id="mealKcalInput" inputmode="numeric" style="width:100%;background:transparent;border:none;color:var(--text);text-align:center;font-size:1.05rem;"></div>
           <div class="input-group"><label>Белки г</label><input type="number" id="mealProteinInput" inputmode="numeric" style="width:100%;background:transparent;border:none;color:var(--text);text-align:center;font-size:1.05rem;"></div>
@@ -407,8 +444,11 @@
     </div>
 
     <div class="panel">
-      <span class="label-tag">Последние дни</span>
-      <div id="nutriDaysList"></div>
+      <div id="adaptiveSuggestionBox"></div>
+      <span class="label-tag">Калории по дням (21 день)</span>
+      <div id="kcalTrendChart"></div>
+      <span class="label-tag" style="margin-top:16px;">Вес тела за то же время</span>
+      <div id="weightTrendMiniChart"></div>
     </div>
 
     <div class="panel" style="margin-bottom:0;">
@@ -700,6 +740,75 @@ async function saveBodyLogEntry(kg){
   bodyLog.sort((a,b) => a.t - b.t);
   if (bodyLog.length > BODYLOG_CAP) bodyLog = bodyLog.slice(bodyLog.length - BODYLOG_CAP);
   await storageSet(BODYLOG_KEY, JSON.stringify(bodyLog));
+}
+
+/* ============================================================
+   BODY PHOTO STORAGE (IndexedDB)
+   Progress photos are the one thing in this app too big and too personal for the
+   4096-byte CloudStorage keys used everywhere else — a single compressed photo can be
+   tens of KB. They're kept in IndexedDB, entirely local to this device, never synced
+   anywhere (same reasoning as the Gemini key: nothing here should leave the phone
+   except the one request each new photo makes straight to Google for analysis).
+   Loaded lazily (only once the Progress screen is opened) so app startup stays fast.
+   ============================================================ */
+const BODYPHOTO_DB_NAME = 'ariseDB';
+const BODYPHOTO_STORE = 'bodyPhotos';
+let bodyPhotoDb = null;
+let bodyPhotos = [];       // [{ t, img: 'data:image/jpeg;base64,...', bfLow, bfHigh, note }]
+let bodyPhotosLoaded = false;
+
+function openBodyPhotoDb(){
+  return new Promise((resolve, reject) => {
+    if (!window.indexedDB){ reject(new Error('NO_IDB')); return; }
+    let req;
+    try{ req = indexedDB.open(BODYPHOTO_DB_NAME, 1); }catch(e){ reject(e); return; }
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(BODYPHOTO_STORE)) db.createObjectStore(BODYPHOTO_STORE, { keyPath: 't' });
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error || new Error('IDB_OPEN_FAIL'));
+  });
+}
+async function ensureBodyPhotoDb(){
+  if (bodyPhotoDb) return bodyPhotoDb;
+  try{ bodyPhotoDb = await openBodyPhotoDb(); }catch(e){ bodyPhotoDb = null; }
+  return bodyPhotoDb;
+}
+async function saveBodyPhoto(entry){
+  const db = await ensureBodyPhotoDb();
+  if (!db) throw new Error('NO_IDB');
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(BODYPHOTO_STORE, 'readwrite');
+    tx.objectStore(BODYPHOTO_STORE).put(entry);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+async function loadAllBodyPhotos(){
+  const db = await ensureBodyPhotoDb();
+  if (!db) return [];
+  return new Promise((resolve) => {
+    const tx = db.transaction(BODYPHOTO_STORE, 'readonly');
+    const req = tx.objectStore(BODYPHOTO_STORE).getAll();
+    req.onsuccess = () => resolve((req.result || []).sort((a, b) => a.t - b.t));
+    req.onerror = () => resolve([]);
+  });
+}
+async function deleteBodyPhoto(t){
+  const db = await ensureBodyPhotoDb();
+  if (!db) return;
+  return new Promise((resolve) => {
+    const tx = db.transaction(BODYPHOTO_STORE, 'readwrite');
+    tx.objectStore(BODYPHOTO_STORE).delete(t);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => resolve();
+  });
+}
+async function ensureBodyPhotosLoaded(){
+  if (bodyPhotosLoaded) return;
+  try{ bodyPhotos = await loadAllBodyPhotos(); }catch(e){ bodyPhotos = []; }
+  bodyPhotosLoaded = true;
 }
 
 /* ============================================================
@@ -1343,6 +1452,8 @@ function allExerciseNames(){
 // Minimal inline SVG line chart — single series (title above names it, so no legend needed),
 // thin 2px cyan line with rounded caps, small markers, tap/click for an exact-value tooltip,
 // muted axis text (never the series color), direct end-value labels instead of a dense axis.
+// opts.targetY draws an optional dashed reference line (e.g. a calorie target) — kept muted/
+// recessive and directly labeled rather than added as a second data series or a second axis.
 function renderLineChart(containerId, points, opts={}){
   const el = document.getElementById(containerId);
   if (!el) return;
@@ -1354,13 +1465,16 @@ function renderLineChart(containerId, points, opts={}){
   }
   const W = 300, H = 100, padL = 6, padR = 6, padT = 14, padB = 8;
   const ys = points.map(p => p.y);
-  let minY = Math.min(...ys), maxY = Math.max(...ys);
+  const hasTarget = typeof opts.targetY === 'number';
+  let minY = Math.min(...ys, ...(hasTarget ? [opts.targetY] : []));
+  let maxY = Math.max(...ys, ...(hasTarget ? [opts.targetY] : []));
   if (minY === maxY){ minY -= 1; maxY += 1; }
   const spanY = maxY - minY;
+  const yOf = (v) => padT + (H - padT - padB) * (1 - (v - minY) / spanY);
   const stepX = points.length > 1 ? (W - padL - padR) / (points.length - 1) : 0;
   const coords = points.map((p, i) => ({
     x: padL + i * stepX,
-    y: padT + (H - padT - padB) * (1 - (p.y - minY) / spanY),
+    y: yOf(p.y),
     y0: p.y, label: p.label || '',
   }));
   const pathD = coords.map((c, i) => (i === 0 ? 'M' : 'L') + c.x.toFixed(1) + ',' + c.y.toFixed(1)).join(' ');
@@ -1368,6 +1482,11 @@ function renderLineChart(containerId, points, opts={}){
     <circle cx="${c.x}" cy="${c.y}" r="3" fill="var(--cyan)" stroke="var(--panel)" stroke-width="1.5" vector-effect="non-scaling-stroke"></circle>
     <circle cx="${c.x}" cy="${c.y}" r="9" fill="transparent" class="chart-hit" data-label="${c.label}" data-value="${fmt(c.y0)}${unit}"></circle>
   `).join('');
+  const targetLine = hasTarget ? (() => {
+    const ty = yOf(opts.targetY);
+    return `<line x1="${padL}" y1="${ty}" x2="${W - padR}" y2="${ty}" stroke="var(--text-dim)" stroke-width="1" stroke-dasharray="3,3" vector-effect="non-scaling-stroke"/>
+      <text x="${padL}" y="${ty - 3}" font-size="7" fill="var(--text-dim)">${opts.targetLabel || 'цель'}</text>`;
+  })() : '';
   const first = coords[0], last = coords[coords.length - 1];
   const delta = last.y0 - first.y0;
   const tipId = containerId + 'Tip';
@@ -1375,6 +1494,7 @@ function renderLineChart(containerId, points, opts={}){
     <div style="position:relative;">
       <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:90px;display:block;overflow:visible;">
         <line x1="${padL}" y1="${H - padB}" x2="${W - padR}" y2="${H - padB}" stroke="var(--line)" stroke-width="1" vector-effect="non-scaling-stroke"/>
+        ${targetLine}
         <path d="${pathD}" fill="none" stroke="var(--cyan)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
         ${dots}
       </svg>
@@ -1476,7 +1596,10 @@ function renderBodyWeightSection(){
     document.getElementById('bodyWeightInput').value = last.kg;
   }
   const points = bodyLog.map(e => ({ y: e.kg, label: new Date(e.t).toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' }) }));
-  renderLineChart('bodyWeightChart', points, { unit: 'кг', emptyText: 'Добавьте пару измерений, чтобы увидеть здесь динамику.' });
+  renderLineChart('bodyWeightChart', points, {
+    unit: 'кг', format: v => v.toLocaleString('ru-RU', { minimumFractionDigits:1, maximumFractionDigits:1 }),
+    emptyText: 'Добавьте пару измерений, чтобы увидеть здесь динамику.',
+  });
 }
 
 function renderSessionList(){
@@ -1492,7 +1615,53 @@ function renderSessionList(){
   }).join('');
 }
 
-function renderProgressScreen(){
+function showBodyPhotoError(msg){
+  document.getElementById('bodyPhotoError').innerHTML = msg ? `<div class="error-box">${msg}</div>` : '';
+}
+
+function renderBodyFatChart(){
+  const points = bodyPhotos.filter(p => typeof p.bfLow === 'number').map(p => ({
+    y: (p.bfLow + p.bfHigh) / 2,
+    label: new Date(p.t).toLocaleDateString('ru-RU', { day:'numeric', month:'short' }),
+  }));
+  renderLineChart('bodyFatChart', points, {
+    unit: '%',
+    emptyText: 'Добавьте пару фото, чтобы увидеть примерную динамику % жира.',
+  });
+}
+function renderBodyPhotoCompare(){
+  const wrap = document.getElementById('bodyPhotoCompare');
+  if (bodyPhotos.length < 2){ wrap.innerHTML = ''; return; }
+  const first = bodyPhotos[0], last = bodyPhotos[bodyPhotos.length - 1];
+  wrap.innerHTML = `
+    <div class="photo-compare-row">
+      <div class="photo-compare-col"><img src="${first.img}"><div class="cap">${new Date(first.t).toLocaleDateString('ru-RU')}</div></div>
+      <div class="photo-compare-col"><img src="${last.img}"><div class="cap">${new Date(last.t).toLocaleDateString('ru-RU')}</div></div>
+    </div>`;
+}
+function renderBodyPhotoList(){
+  const wrap = document.getElementById('bodyPhotoList');
+  if (!bodyPhotos.length){ wrap.innerHTML = `<div class="nutri-empty">Пока нет фото.</div>`; return; }
+  const recent = bodyPhotos.slice(-6).reverse();
+  wrap.innerHTML = recent.map(p => `
+    <div class="photo-entry">
+      <img src="${p.img}">
+      <div class="meta">
+        <b>${new Date(p.t).toLocaleDateString('ru-RU', { day:'numeric', month:'short' })}${typeof p.bfLow === 'number' ? ` · ~${p.bfLow}-${p.bfHigh}%` : ''}</b>
+        ${p.note || ''}
+      </div>
+      <button class="meal-del" data-t="${p.t}">✕</button>
+    </div>
+  `).join('');
+}
+async function renderBodyPhotoSection(){
+  await ensureBodyPhotosLoaded();
+  renderBodyFatChart();
+  renderBodyPhotoCompare();
+  renderBodyPhotoList();
+}
+
+async function renderProgressScreen(){
   renderRankCard();
   renderWeekDots();
   renderTonnageChart();
@@ -1500,6 +1669,7 @@ function renderProgressScreen(){
   renderExerciseChart();
   renderBodyWeightSection();
   renderSessionList();
+  try{ await renderBodyPhotoSection(); }catch(e){}
 }
 
 document.getElementById('playerTag').onclick = () => { renderProgressScreen(); showScreen('screen-progress'); };
@@ -1513,6 +1683,69 @@ document.getElementById('logWeightBtn').onclick = async () => {
   renderBodyWeightSection();
   vibrate(20);
 };
+
+document.getElementById('addBodyPhotoBtn').onclick = () => {
+  if (!getGeminiKey()){
+    showBodyPhotoError('Сначала укажите API-ключ Gemini в настройках раздела «Питание» — тот же ключ используется и здесь.');
+    return;
+  }
+  showBodyPhotoError('');
+  document.getElementById('bodyPhotoInput').click();
+};
+
+document.getElementById('bodyPhotoInput').onchange = async (e) => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  showBodyPhotoError('');
+  document.getElementById('bodyPhotoAnalyzing').style.display = 'flex';
+  let entry = null;
+  try{
+    const base64 = await fileToResizedBase64Jpeg(file, 900, 0.78);
+    const prevPhoto = bodyPhotos.length ? bodyPhotos[bodyPhotos.length - 1] : null;
+    const prevBase64 = prevPhoto ? prevPhoto.img.split(',')[1] : null;
+    entry = { t: Date.now(), img: 'data:image/jpeg;base64,' + base64, bfLow: null, bfHigh: null, note: '' };
+    try{
+      const result = await analyzeBodyPhoto(base64, prevBase64);
+      entry.bfLow = result.bfLow; entry.bfHigh = result.bfHigh; entry.note = result.note;
+    }catch(err){
+      const messages = {
+        NO_KEY: 'Не указан API-ключ Gemini — фото сохранено без оценки.',
+        NETWORK: 'Не удалось связаться с Gemini — фото сохранено без оценки.',
+        SAFETY: 'Gemini отказался анализировать фото (возможно, сработал фильтр безопасности) — фото сохранено без оценки, попробуйте другой ракурс в следующий раз.',
+        PARSE: 'Gemini прислал неожиданный ответ — фото сохранено без оценки.',
+        API: `Gemini вернул ошибку: ${err.message} — фото сохранено без оценки.`,
+      };
+      showBodyPhotoError(messages[err.code] || 'Не удалось получить оценку — фото сохранено без оценки.');
+    }
+  }catch(err){
+    document.getElementById('bodyPhotoAnalyzing').style.display = 'none';
+    showBodyPhotoError('Не удалось обработать фото: ' + err.message);
+    return;
+  }
+  try{
+    await saveBodyPhoto(entry);
+    bodyPhotos.push(entry);
+  }catch(err){
+    showBodyPhotoError('Не удалось сохранить фото на устройстве (возможно, не хватает места).');
+  }
+  document.getElementById('bodyPhotoAnalyzing').style.display = 'none';
+  renderBodyFatChart();
+  renderBodyPhotoCompare();
+  renderBodyPhotoList();
+  vibrate(20);
+};
+
+document.getElementById('bodyPhotoList').addEventListener('click', async (e) => {
+  const btn = e.target.closest('.meal-del');
+  if (!btn) return;
+  const t = parseFloat(btn.dataset.t);
+  try{ await deleteBodyPhoto(t); }catch(err){}
+  bodyPhotos = bodyPhotos.filter(p => p.t !== t);
+  renderBodyFatChart();
+  renderBodyPhotoCompare();
+  renderBodyPhotoList();
+});
 
 /* ============================================================
    NUTRITION SCREEN — photo calorie estimation via Gemini, daily
@@ -1571,23 +1804,158 @@ function renderMealList(){
   `).join('');
 }
 
-async function renderNutriDaysList(){
-  const wrap = document.getElementById('nutriDaysList');
-  wrap.innerHTML = `<div class="nutri-empty">Загрузка…</div>`;
+const TREND_WINDOW_DAYS = 21;
+const ADAPT_MIN_SPAN_DAYS = 10;   // need body-weight check-ins spanning at least this long...
+const ADAPT_MIN_LOGGED_DAYS = 7;  // ...and at least this many days with food actually logged in that span
+const ADAPT_MIN_DELTA_KCAL = 75;  // don't bother suggesting a change smaller than this — just noise
+const ADAPT_MAX_CLAMP_KCAL = 300; // don't let one noisy window swing the suggestion further than this from the current target
+const KCAL_PER_KG_FAT = 7700;     // standard estimate for the energy density of a kg of body fat
+
+// Loads the last N calendar days of nutrition totals (from the day-shards, using the in-memory
+// copy for today so a just-logged meal shows up without a re-read) — the shared data source for
+// both the trend chart and the adaptive-target suggestion below.
+async function loadNutritionTrend(days){
+  days = days || TREND_WINDOW_DAYS;
   const todayKey = dayKeyOf(Date.now());
-  const prevKeys = nutriDays.filter(k => k !== todayKey).slice(-6).reverse();
-  if (!prevKeys.length){
-    wrap.innerHTML = `<div class="nutri-empty">Больше дней пока нет — история появится по мере записи приёмов пищи.</div>`;
+  const keys = [];
+  for (let i = days - 1; i >= 0; i--) keys.push(dayKeyOf(Date.now() - i * 86400000));
+  const shards = await Promise.all(keys.map(k => k === todayKey ? Promise.resolve(todayNutriEntries) : loadNutriDayShard(k).catch(() => [])));
+  return keys.map((k, i) => ({
+    dayKey: k,
+    date: dateFromDayKey(k),
+    kcal: shards[i].reduce((s, e) => s + (e.k || 0), 0),
+    logged: shards[i].length > 0,
+  }));
+}
+
+// Two separate single-axis charts stacked together, not one dual-axis chart — calories and
+// kilograms sit on completely different scales, so a shared y-axis would be misleading no
+// matter how it's scaled. Same date window on both so a visual side-by-side comparison works.
+async function renderTrendCharts(){
+  const trendData = await loadNutritionTrend(TREND_WINDOW_DAYS);
+  const loggedDays = trendData.filter(d => d.logged);
+  const target = computeKcalTarget();
+  const kcalPoints = loggedDays.map(d => ({ y: d.kcal, label: d.date.toLocaleDateString('ru-RU', { day:'numeric', month:'short' }) }));
+  renderLineChart('kcalTrendChart', kcalPoints, {
+    unit: ' ккал', targetY: target, targetLabel: 'цель',
+    emptyText: 'Записывайте приёмы пищи несколько дней подряд, чтобы увидеть тренд.',
+  });
+
+  const windowStart = trendData[0].date.getTime();
+  const weightPoints = bodyLog.filter(e => e.t >= windowStart).map(e => ({
+    y: e.kg, label: new Date(e.t).toLocaleDateString('ru-RU', { day:'numeric', month:'short' }),
+  }));
+  renderLineChart('weightTrendMiniChart', weightPoints, {
+    unit: 'кг', format: v => v.toLocaleString('ru-RU', { minimumFractionDigits:1, maximumFractionDigits:1 }),
+    emptyText: 'Добавьте пару замеров веса в разделе «Прогресс», чтобы сравнить с калориями.',
+  });
+
+  return trendData;
+}
+
+// Flat scale weight doesn't necessarily mean a stalled cut — it's also exactly what
+// recomposition (losing fat while gaining muscle) looks like on a scale. Before ever
+// suggesting a LOWER calorie target, check for two independent signs that recomposition
+// might be what's actually happening, so a genuinely working plan doesn't get needlessly cut:
+//   A) the AI photo body-fat estimate trending down within the same window
+//   B) tracked lift weights broadly trending up within the same window (strength ≈ muscle)
+// Either signal is enough to hold off on the "eat less" suggestion.
+function detectRecompSignal(windowStartTs, windowEndTs){
+  const photosInWindow = bodyPhotos.filter(p => p.t >= windowStartTs && p.t <= windowEndTs && typeof p.bfLow === 'number');
+  let bfSignal = null;
+  if (photosInWindow.length >= 2){
+    const firstBf = (photosInWindow[0].bfLow + photosInWindow[0].bfHigh) / 2;
+    const lastBf = (photosInWindow[photosInWindow.length - 1].bfLow + photosInWindow[photosInWindow.length - 1].bfHigh) / 2;
+    if (lastBf < firstBf - 0.5) bfSignal = `по фото % жира визуально снизился (~${Math.round(firstBf)}% → ~${Math.round(lastBf)}%)`;
+  }
+
+  const names = Object.keys(progress);
+  let risingCount = 0, trackedCount = 0;
+  names.forEach(name => {
+    const h = progress[name] && progress[name].h;
+    if (!h || h.length < 2) return;
+    trackedCount++;
+    if (h[h.length - 1] > h[0]) risingCount++;
+  });
+  let strengthSignal = null;
+  if (trackedCount >= 3 && risingCount / trackedCount >= 0.6){
+    strengthSignal = `рабочие веса растут в ${risingCount} из ${trackedCount} отслеживаемых упражнений`;
+  }
+
+  if (!bfSignal && !strengthSignal) return null;
+  return { note: [bfSignal, strengthSignal].filter(Boolean).join(', и ') };
+}
+
+// Estimates your ACTUAL maintenance calories from what you really ate and what your body weight
+// really did — not just the population formula — then re-applies your chosen deficit% on top of
+// that. This is what "adaptive" means here: if the formula-based target isn't producing the
+// expected result, the suggestion is grounded in your own logged data instead of guessing again.
+// Needs enough real data before it will say anything, and clamps the suggestion so one noisy
+// week (missed logs, water weight) can't swing it wildly.
+function computeAdaptiveSuggestion(trendData){
+  const windowStart = trendData[0].date.getTime();
+  const weightsInWindow = bodyLog.filter(e => e.t >= windowStart);
+  if (weightsInWindow.length < 2) return null;
+  const first = weightsInWindow[0], last = weightsInWindow[weightsInWindow.length - 1];
+  const spanDays = (last.t - first.t) / 86400000;
+  if (spanDays < ADAPT_MIN_SPAN_DAYS) return null;
+
+  const loggedInSpan = trendData.filter(d => d.logged && d.date.getTime() >= first.t && d.date.getTime() <= last.t);
+  if (loggedInSpan.length < ADAPT_MIN_LOGGED_DAYS) return null;
+
+  const avgDailyKcal = loggedInSpan.reduce((s, d) => s + d.kcal, 0) / loggedInSpan.length;
+  const weightChangeKg = last.kg - first.kg;
+  const empiricalTdee = avgDailyKcal - (weightChangeKg / spanDays) * KCAL_PER_KG_FAT;
+  const deficitPct = (typeof nutriSettings.def === 'number' ? nutriSettings.def : 15) / 100;
+  const currentTarget = computeKcalTarget();
+  let suggested = Math.round((empiricalTdee * (1 - deficitPct)) / 25) * 25;
+  suggested = Math.max(currentTarget - ADAPT_MAX_CLAMP_KCAL, Math.min(currentTarget + ADAPT_MAX_CLAMP_KCAL, suggested));
+  if (Math.abs(suggested - currentTarget) < ADAPT_MIN_DELTA_KCAL) return null;
+
+  const result = { suggested, currentTarget, spanDays: Math.round(spanDays), weightChangeKg, loggedDays: loggedInSpan.length };
+  if (suggested < currentTarget){
+    const recomp = detectRecompSignal(first.t, last.t);
+    if (recomp){ result.recompNote = recomp.note; }
+  }
+  return result;
+}
+
+function renderAdaptiveSuggestion(sug){
+  const box = document.getElementById('adaptiveSuggestionBox');
+  if (!sug){ box.innerHTML = ''; return; }
+
+  if (sug.recompNote){
+    box.innerHTML = `
+      <div class="insight-box">
+        Вес почти не меняется, но ${sug.recompNote} — это больше похоже на рекомпозицию (жир уходит, мышцы растут), чем на застой. Норму калорий снижать не стоит.
+        <div class="btn-row" style="margin-top:10px;">
+          <button class="btn ghost" id="adaptiveDismissBtn" style="flex:1;padding:8px;font-size:0.68rem;">Понятно</button>
+        </div>
+      </div>`;
+    document.getElementById('adaptiveDismissBtn').onclick = () => { box.innerHTML = ''; };
     return;
   }
-  const shards = await Promise.all(prevKeys.map(k => loadNutriDayShard(k).catch(() => [])));
-  const target = computeKcalTarget();
-  wrap.innerHTML = prevKeys.map((k, i) => {
-    const total = shards[i].reduce((s, e) => s + (e.k || 0), 0);
-    const label = dateFromDayKey(k).toLocaleDateString('ru-RU', { day:'numeric', month:'short' });
-    const over = total > target;
-    return `<div class="day-total-row"><span>${label}</span><b style="${over ? 'color:var(--gold);' : ''}">${Math.round(total).toLocaleString('ru-RU')} / ${target.toLocaleString('ru-RU')} ккал</b></div>`;
-  }).join('');
+
+  const dir = sug.suggested < sug.currentTarget ? 'снизить' : 'повысить';
+  const weightDir = sug.weightChangeKg <= 0 ? 'снизился' : 'вырос';
+  box.innerHTML = `
+    <div class="insight-box">
+      За последние ${sug.spanDays} дн. вес ${weightDir} на ${Math.abs(sug.weightChangeKg).toFixed(1)}кг при среднем потреблении по ${sug.loggedDays} дн. с записями.
+      Похоже, норму стоит ${dir} до <b>${sug.suggested.toLocaleString('ru-RU')} ккал</b> (сейчас ${sug.currentTarget.toLocaleString('ru-RU')}).
+      <div class="btn-row" style="margin-top:10px;">
+        <button class="btn ghost" id="adaptiveDismissBtn" style="flex:1;padding:8px;font-size:0.68rem;">Скрыть</button>
+        <button class="btn primary" id="adaptiveApplyBtn" style="flex:1;padding:8px;font-size:0.68rem;">Применить ${sug.suggested}</button>
+      </div>
+    </div>`;
+  document.getElementById('adaptiveApplyBtn').onclick = async () => {
+    nutriSettings.kcalOverride = sug.suggested;
+    try{ await saveNutriSettings(); }catch(e){}
+    renderNutritionTotals();
+    renderNutritionTeaser();
+    box.innerHTML = '';
+    vibrate(20);
+  };
+  document.getElementById('adaptiveDismissBtn').onclick = () => { box.innerHTML = ''; };
 }
 
 function renderNutritionTeaser(){
@@ -1600,13 +1968,33 @@ function renderNutritionTeaser(){
   btn.innerHTML = `🍽 Питание<span style="display:block;font-size:0.58rem;color:var(--text-dim);text-transform:none;letter-spacing:0.02em;margin-top:3px;">${subText}</span>`;
 }
 
+// Portion selector (100/75/50/25%) scales the 4 macro fields from a stored "base" — the
+// full-plate estimate — rather than compounding off whatever's currently in the fields, so
+// clicking 50% then 75% gives 75% of the original plate, not 75% of the halved one.
+let mealEditBase = { kcal:0, protein:0, fat:0, carbs:0 };
+let mealEditSettingProgrammatically = false;
+
+function applyPortionToInputs(pct){
+  mealEditSettingProgrammatically = true;
+  document.getElementById('mealKcalInput').value = Math.round(mealEditBase.kcal * pct / 100) || '';
+  document.getElementById('mealProteinInput').value = Math.round(mealEditBase.protein * pct / 100) || '';
+  document.getElementById('mealFatInput').value = Math.round(mealEditBase.fat * pct / 100) || '';
+  document.getElementById('mealCarbsInput').value = Math.round(mealEditBase.carbs * pct / 100) || '';
+  mealEditSettingProgrammatically = false;
+}
+function setActivePortionBtn(pct){
+  document.querySelectorAll('.portion-btn').forEach(b => b.classList.toggle('active', parseInt(b.dataset.pct) === pct));
+}
+
 function showMealEditBox(vals){
   const v = vals || {};
+  mealEditBase = { kcal: v.kcal || 0, protein: v.protein || 0, fat: v.fat || 0, carbs: v.carbs || 0 };
   document.getElementById('mealNameInput').value = v.name || '';
   document.getElementById('mealKcalInput').value = v.kcal || '';
   document.getElementById('mealProteinInput').value = v.protein || '';
   document.getElementById('mealFatInput').value = v.fat || '';
   document.getElementById('mealCarbsInput').value = v.carbs || '';
+  setActivePortionBtn(100);
   document.getElementById('mealEditBox').style.display = 'block';
 }
 function hideMealEditBox(){
@@ -1616,10 +2004,9 @@ function showNutritionError(msg){
   document.getElementById('nutritionError').innerHTML = msg ? `<div class="error-box">${msg}</div>` : '';
 }
 
-function renderNutritionScreen(){
+async function renderNutritionScreen(){
   renderNutritionTotals();
   renderMealList();
-  renderNutriDaysList();
   document.getElementById('geminiKeyInput').value = getGeminiKey();
   document.getElementById('heightInput').value = nutriSettings.h || '';
   document.getElementById('ageInput').value = nutriSettings.age || '';
@@ -1627,6 +2014,11 @@ function renderNutritionScreen(){
   document.getElementById('deficitInput').value = String(nutriSettings.def != null ? nutriSettings.def : 15);
   document.getElementById('kcalOverrideInput').value = nutriSettings.kcalOverride || '';
   document.getElementById('proteinOverrideInput').value = nutriSettings.proteinOverride || '';
+  try{
+    await ensureBodyPhotosLoaded(); // recomposition signal needs the photo history too
+    const trendData = await renderTrendCharts();
+    renderAdaptiveSuggestion(computeAdaptiveSuggestion(trendData));
+  }catch(e){}
 }
 
 // Downscale + JPEG-compress the photo client-side before it ever leaves the device — keeps the
@@ -1708,6 +2100,59 @@ async function analyzeFoodPhoto(base64Jpeg){
     protein: Math.max(0, Math.round(Number(parsed.protein_g) || 0)),
     fat: Math.max(0, Math.round(Number(parsed.fat_g) || 0)),
     carbs: Math.max(0, Math.round(Number(parsed.carbs_g) || 0)),
+  };
+}
+
+const GEMINI_BODY_PROMPT = 'Ты — ассистент по визуальной оценке физической формы для фитнес-приложения. Пользователь прислал фото своего тела для отслеживания прогресса тренировок. Дай ГРУБУЮ визуальную оценку процента жира в организме в виде диапазона (bf_low и bf_high, например 14 и 18) по видимому рельефу мышц и талии — это приблизительная прикидка на глаз, а не точное измерение. Если ниже есть второе изображение — это более раннее фото того же человека для сравнения: напиши короткий комментарий на русском о видимых изменениях (стало ли суше/рельефнее или без явных изменений). Если второго изображения нет — просто коротко опиши текущую форму в note. Не давай медицинских советов, только визуальное описание. Отвечай только JSON по заданной схеме, без пояснений.';
+
+// Same no-backend-of-ours pattern as analyzeFoodPhoto, extended for two things specific to body
+// photos: it can take a second (earlier) image for a direct visual comparison, and it treats a
+// missing/blocked response as a possible safety-filter hit (a body photo is more likely to trip
+// that than a plate of food) rather than just a generic parse failure, so the UI can say so.
+async function analyzeBodyPhoto(base64Current, base64Previous){
+  const key = getGeminiKey();
+  if (!key){ const err = new Error('NO_KEY'); err.code = 'NO_KEY'; throw err; }
+  const model = nutriSettings.model || 'gemini-3.7-flash';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`;
+  const parts = [{ text: GEMINI_BODY_PROMPT + (base64Previous ? '' : ' Второго изображения нет.') }];
+  parts.push({ inline_data: { mime_type: 'image/jpeg', data: base64Current } });
+  if (base64Previous) parts.push({ inline_data: { mime_type: 'image/jpeg', data: base64Previous } });
+  const body = {
+    contents: [{ parts }],
+    generationConfig: {
+      responseMimeType: 'application/json',
+      responseSchema: {
+        type: 'OBJECT',
+        properties: { bf_low: { type: 'NUMBER' }, bf_high: { type: 'NUMBER' }, note: { type: 'STRING' } },
+        required: ['bf_low', 'bf_high', 'note'],
+      },
+    },
+  };
+  let res;
+  try{
+    res = await fetch(url, { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(body) });
+  }catch(e){ const err = new Error('NETWORK'); err.code = 'NETWORK'; throw err; }
+  if (!res.ok){
+    let detail = '';
+    try{ detail = (await res.text()).slice(0, 180); }catch(e){}
+    const err = new Error(`HTTP ${res.status}: ${detail}`); err.code = 'API'; throw err;
+  }
+  let data;
+  try{ data = await res.json(); }catch(e){ const err = new Error('BAD_JSON'); err.code = 'PARSE'; throw err; }
+  const candidate = data && data.candidates && data.candidates[0];
+  const text = candidate && candidate.content && candidate.content.parts && candidate.content.parts[0] && candidate.content.parts[0].text;
+  if (!text){
+    const finishReason = candidate && candidate.finishReason;
+    const err = new Error(finishReason ? `BLOCKED:${finishReason}` : 'EMPTY');
+    err.code = finishReason && finishReason !== 'STOP' ? 'SAFETY' : 'PARSE';
+    throw err;
+  }
+  let parsed;
+  try{ parsed = JSON.parse(text); }catch(e){ const err = new Error('BAD_JSON'); err.code = 'PARSE'; throw err; }
+  return {
+    bfLow: Math.max(3, Math.min(60, Math.round(Number(parsed.bf_low) || 0))),
+    bfHigh: Math.max(3, Math.min(60, Math.round(Number(parsed.bf_high) || 0))),
+    note: String(parsed.note || '').slice(0, 200),
   };
 }
 
@@ -1802,10 +2247,35 @@ document.getElementById('nutriSettingsSaveBtn').onclick = async () => {
   nutriSettings.proteinOverride = proteinOv > 0 ? proteinOv : null;
   try{ await saveNutriSettings(); }catch(e){}
   renderNutritionTotals();
-  renderNutriDaysList();
   renderNutritionTeaser();
+  try{
+    const trendData = await renderTrendCharts();
+    renderAdaptiveSuggestion(computeAdaptiveSuggestion(trendData));
+  }catch(e){}
   vibrate(20);
 };
+
+document.querySelectorAll('.portion-btn').forEach(btn => {
+  btn.onclick = () => {
+    const pct = parseInt(btn.dataset.pct);
+    applyPortionToInputs(pct);
+    setActivePortionBtn(pct);
+  };
+});
+['mealKcalInput', 'mealProteinInput', 'mealFatInput', 'mealCarbsInput'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => {
+    if (mealEditSettingProgrammatically) return;
+    // a real keystroke re-baselines all 4 fields to what's on screen right now and resets to
+    // 100% — portions from here on scale off this newly-typed value, not the original AI guess
+    mealEditBase = {
+      kcal: parseFloat(document.getElementById('mealKcalInput').value) || 0,
+      protein: parseFloat(document.getElementById('mealProteinInput').value) || 0,
+      fat: parseFloat(document.getElementById('mealFatInput').value) || 0,
+      carbs: parseFloat(document.getElementById('mealCarbsInput').value) || 0,
+    };
+    setActivePortionBtn(100);
+  });
+});
 
 /* ============================================================
    UTIL: vibration + beep
