@@ -20,6 +20,7 @@
     --text-dim:#5f7691;
     --gold:#ffd166;
     --danger:#ff5c7a;
+    --tg-safe-top:0px; /* set from Telegram.WebApp's safe-area insets at runtime — see applyTelegramSafeArea() */
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{height:100%;}
@@ -37,7 +38,7 @@
     justify-content:center;
   }
   #app{width:100%;max-width:480px;min-height:100vh;position:relative;display:flex;flex-direction:column;}
-  .screen{display:none;flex-direction:column;flex:1;padding:18px 16px 34px;animation:fadeIn .35s ease;}
+  .screen{display:none;flex-direction:column;flex:1;padding:calc(18px + var(--tg-safe-top)) 16px 34px;animation:fadeIn .35s ease;}
   .screen.active{display:flex;}
   @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 
@@ -644,6 +645,25 @@ const PROGRESS_HIST_CAP = 6; // weight snapshots kept per exercise, for the tren
 const BODYLOG_CAP = 150;   // ~20 bytes/entry, one per day → ~5 months of daily entries
 const NOTE_MAX = 30;
 const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
+
+// When Telegram doesn't hand the Mini App the whole screen, its own header (back button,
+// chat menu, "...") floats on top of our content instead of pushing it down — so we have to
+// read how much space it's covering and pad our own topbar below it ourselves. safeAreaInset
+// is the device-level cutout (status bar/notch); contentSafeAreaInset is Telegram's own floating
+// header on top of that. Both can be undefined on older Telegram app versions, and can change
+// after the initial call (rotation, header showing/hiding), so this re-runs on those events too.
+function applyTelegramSafeArea(){
+  if (!tg) return;
+  try{
+    const hasInsetApi = !!(tg.safeAreaInset || tg.contentSafeAreaInset);
+    let top = (tg.safeAreaInset && tg.safeAreaInset.top || 0) + (tg.contentSafeAreaInset && tg.contentSafeAreaInset.top || 0);
+    // older clients that don't expose the inset API at all still commonly overlap with a native
+    // header of roughly this height — better a bit of extra padding than a hidden Домой button
+    if (!hasInsetApi) top = 90;
+    document.documentElement.style.setProperty('--tg-safe-top', top + 'px');
+  }catch(e){}
+}
+
 let storageMode = 'memory';
 let memoryStore = {};
 // lifetime counter that never gets capped/rotated — rank/level must never freeze once history
@@ -2392,6 +2412,9 @@ async function initApp(){
       tg.expand();
       tg.setHeaderColor && tg.setHeaderColor('#05070d');
       tg.setBackgroundColor && tg.setBackgroundColor('#05070d');
+      applyTelegramSafeArea();
+      tg.onEvent && tg.onEvent('safeAreaChanged', applyTelegramSafeArea);
+      tg.onEvent && tg.onEvent('contentSafeAreaChanged', applyTelegramSafeArea);
       tg.BackButton && tg.BackButton.onClick(() => {
         const active = document.querySelector('.screen.active');
         if (active && active.id === 'screen-session') document.getElementById('quitBtn').click();
