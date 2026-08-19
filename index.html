@@ -1824,6 +1824,10 @@ document.getElementById('bodyPhotoInput').onchange = async (e) => {
   renderBodyFatChart();
   renderBodyPhotoCompare();
   renderBodyPhotoList();
+  // a new photo can shift the fat-score half of the rank composite — refresh the rank
+  // card and home pill right away instead of leaving them stale until the next visit
+  renderRankCard();
+  renderRankPill();
   vibrate(20);
 };
 
@@ -1836,6 +1840,8 @@ document.getElementById('bodyPhotoList').addEventListener('click', async (e) => 
   renderBodyFatChart();
   renderBodyPhotoCompare();
   renderBodyPhotoList();
+  renderRankCard();
+  renderRankPill();
 });
 
 /* ============================================================
