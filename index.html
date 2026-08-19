@@ -318,16 +318,14 @@
     </div>
 
     <div class="panel">
-      <span class="label-tag">Ранг охотника</span>
-      <div style="display:flex;align-items:center;gap:16px;">
-        <div id="rankLetter" class="glow" style="font-size:2.4rem;color:var(--cyan);line-height:1;">E</div>
-        <div style="flex:1;">
-          <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--text-dim);margin-bottom:5px;">
-            <span id="rankLevelText">УР 0</span><span id="rankNextText"></span>
-          </div>
-          <div class="progress-bar"><div class="progress-fill" id="rankFill" style="width:0%"></div></div>
-        </div>
+      <span class="label-tag">Ранг формы</span>
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:10px;">
+        <div id="rankLetter" class="glow" style="font-size:2.1rem;color:var(--cyan);line-height:1;flex-shrink:0;">🛋️</div>
+        <div id="rankLevelText" style="font-size:0.95rem;color:var(--text);line-height:1.25;">Диванный ополченец</div>
       </div>
+      <div class="progress-bar"><div class="progress-fill" id="rankFill" style="width:0%"></div></div>
+      <div id="rankNextText" style="font-size:0.72rem;color:var(--text-dim);margin-top:6px;"></div>
+      <div id="rankComposite" style="font-size:0.68rem;color:var(--text-dim);margin-top:4px;"></div>
     </div>
 
     <div class="panel">
@@ -970,19 +968,87 @@ function currentWeightFor(name, programWeight){
   return (progress[name] && typeof progress[name].w === 'number') ? progress[name].w : programWeight;
 }
 
-const RANK_TIERS = [
-  { rank:'E', min:0 }, { rank:'D', min:5 }, { rank:'C', min:15 },
-  { rank:'B', min:30 }, { rank:'A', min:50 }, { rank:'S', min:80 },
+// Rank ladder — NOT tied to any real person. Each tier is a fictional archetype+phase
+// spanning a wide mix of disciplines (and a couple of deliberately unglamorous non-athlete
+// states at the bottom, since "no athlete fits yet" is itself a valid starting point).
+// 25 tiers on purpose: lots of small, frequent wins rather than a few big jumps.
+const DISCIPLINE_TIERS = [
+  { emoji:'🛋️', name:'Диванный ополченец' },
+  { emoji:'📦', name:'Офисный марафонец на удалёнке' },
+  { emoji:'🎮', name:'Кибератлет турнирной ночи' },
+  { emoji:'🚶', name:'Турист выходного дня' },
+  { emoji:'🐢', name:'Начинающий бегун парковых дорожек' },
+  { emoji:'🚴', name:'Велосипедист выходного дня' },
+  { emoji:'🏊', name:'Пловец в межсезонье' },
+  { emoji:'🧗', name:'Скалолаз по вторникам' },
+  { emoji:'🤺', name:'Фехтовальщик на общей подготовке' },
+  { emoji:'🥊', name:'Боксёр на общей подготовке' },
+  { emoji:'🤸', name:'Гимнаст на базовом цикле' },
+  { emoji:'🥋', name:'Дзюдоист на сборах' },
+  { emoji:'🤼', name:'Борец вольного стиля на сборах' },
+  { emoji:'🏉', name:'Регбист в подготовительном цикле' },
+  { emoji:'🦣', name:'Сумоист в межсезонье' },
+  { emoji:'🚣', name:'Гребец на объёмном цикле' },
+  { emoji:'⛰️', name:'Альпинист экспедиционного цикла' },
+  { emoji:'🤾', name:'Гандболист в разгаре сезона' },
+  { emoji:'🏋️', name:'Пауэрлифтер в межсезонье' },
+  { emoji:'🏃', name:'Спринтер на предсезонных сборах' },
+  { emoji:'🏆', name:'Кроссфитер в рабочем цикле' },
+  { emoji:'🥇', name:'Триатлет в пиковой подготовке' },
+  { emoji:'🎯', name:'Тяжелоатлет на пике цикла' },
+  { emoji:'💪', name:'Бодибилдер на сушке' },
+  { emoji:'👑', name:'Элитный атлет в пиковой форме' },
 ];
-function computeRank(sessionCount){
-  let tier = RANK_TIERS[0], next = RANK_TIERS[1];
-  for (let i=0; i<RANK_TIERS.length; i++){
-    if (sessionCount >= RANK_TIERS[i].min){ tier = RANK_TIERS[i]; next = RANK_TIERS[i+1] || null; }
-  }
-  const into = sessionCount - tier.min;
-  const span = next ? next.min - tier.min : into || 1;
-  const pct = next ? Math.min(100, Math.round((into/span)*100)) : 100;
-  return { rank: tier.rank, level: sessionCount, pct, next: next ? next.rank : null, toNext: next ? next.min - sessionCount : 0 };
+
+// Training-progress signal: average relative growth of tracked working weights versus
+// the oldest snapshot still on file for each exercise (same per-exercise history the
+// recomposition-detection check already reads). 0% growth -> 0, 50%+ growth -> full 100.
+function computeStrengthScore(){
+  const growths = [];
+  Object.keys(progress).forEach(name => {
+    const h = progress[name] && progress[name].h;
+    if (!h || h.length < 2 || !h[0]) return;
+    growths.push((h[h.length - 1] - h[0]) / h[0]);
+  });
+  if (!growths.length) return 0;
+  const avg = growths.reduce((a, b) => a + b, 0) / growths.length;
+  return Math.max(0, Math.min(100, Math.round(avg / 0.5 * 100)));
+}
+
+// Body-composition signal: latest AI photo estimate, if any. null (not 0) when no photo
+// exists yet, so the composite score below knows to fall back to strength-only.
+function computeFatScore(){
+  if (!bodyPhotos.length) return null;
+  const latest = bodyPhotos[bodyPhotos.length - 1];
+  if (typeof latest.bfLow !== 'number' || typeof latest.bfHigh !== 'number') return null;
+  const bf = (latest.bfLow + latest.bfHigh) / 2;
+  // rough scale: ~30%+ visible body fat -> 0, ~8% (shredded) -> 100 — a vibe, not a lab measurement
+  return Math.max(0, Math.min(100, Math.round((30 - bf) / (30 - 8) * 100)));
+}
+
+// The two signals are a qualitative, not quantitative, match: this never claims "you lift
+// exactly what a real powerlifter lifts" — it just picks the archetype+phase whose overall
+// condition is in the same ballpark as your current numbers.
+function computeFormComposite(){
+  const strength = computeStrengthScore();
+  const fat = computeFatScore();
+  return fat === null ? strength : Math.round(strength * 0.5 + fat * 0.5);
+}
+
+function computeRank(){
+  const composite = computeFormComposite();
+  const bandWidth = 100 / DISCIPLINE_TIERS.length;
+  const idx = Math.max(0, Math.min(DISCIPLINE_TIERS.length - 1, Math.floor(composite / bandWidth)));
+  const tier = DISCIPLINE_TIERS[idx];
+  const isMax = idx === DISCIPLINE_TIERS.length - 1;
+  const bandMin = idx * bandWidth;
+  const pct = isMax ? 100 : Math.max(0, Math.min(100, Math.round((composite - bandMin) / bandWidth * 100)));
+  const next = isMax ? null : DISCIPLINE_TIERS[idx + 1];
+  return {
+    tierIndex: idx, emoji: tier.emoji, rank: tier.name, composite, pct, isMax,
+    nextEmoji: next ? next.emoji : null, next: next ? next.name : null,
+    toNext: isMax ? 0 : Math.max(0, Math.round((bandMin + bandWidth) - composite)),
+  };
 }
 
 /* ============================================================
@@ -1145,9 +1211,10 @@ function renderHistoryPanel(){
 }
 
 function renderRankPill(){
-  const r = computeRank(meta.n);
+  const r = computeRank();
   const pill = document.getElementById('playerTag');
-  if (pill) pill.textContent = `РАНГ ${r.rank} · УР ${r.level}`;
+  // keep the topbar pill compact — the full archetype name lives on the Progress screen
+  if (pill) pill.textContent = `${r.emoji} ФОРМА ${r.composite}`;
 }
 
 function selectDay(key, btnEl){
@@ -1342,7 +1409,7 @@ async function finishSession(){
   const totalSets = sessionLog.length;
   const tonnage = sessionLog.reduce((sum, s) => sum + (s.weight * s.reps), 0);
   const exercisesHit = new Set(sessionLog.map(s => s.ex)).size;
-  const rankBefore = computeRank(meta.n);
+  const rankBefore = computeRank();
 
   document.getElementById('questTitle').textContent = 'КВЕСТ ВЫПОЛНЕН';
   document.getElementById('questSub').textContent = `${day.label} — ${day.name}`;
@@ -1373,10 +1440,10 @@ async function finishSession(){
 
   const nextKey = rotationSuggestedDay();
   const nextDay = nextKey ? PROGRAM[nextKey] : null;
-  const rankAfter = computeRank(meta.n);
-  const rankedUp = rankAfter.rank !== rankBefore.rank;
+  const rankAfter = computeRank();
+  const rankedUp = rankAfter.tierIndex !== rankBefore.tierIndex;
   document.getElementById('nextUpPreview').innerHTML = [
-    rankedUp ? `<div style="color:var(--gold);margin-bottom:8px;">⬆ ПОВЫШЕНИЕ РАНГА — добро пожаловать в Ранг ${rankAfter.rank}</div>` : '',
+    rankedUp ? `<div style="color:var(--gold);margin-bottom:8px;">⬆ НОВЫЙ РАНГ ФОРМЫ — добро пожаловать: ${rankAfter.emoji} ${rankAfter.rank}</div>` : '',
     nextDay ? `Далее: <b>${nextDay.label} — ${nextDay.name}</b>` : '',
   ].join('');
 
@@ -1519,11 +1586,15 @@ function renderLineChart(containerId, points, opts={}){
 }
 
 function renderRankCard(){
-  const r = computeRank(meta.n);
-  document.getElementById('rankLetter').textContent = r.rank;
-  document.getElementById('rankLevelText').textContent = `УР ${r.level}`;
-  document.getElementById('rankNextText').textContent = r.next ? `Далее: Ранг ${r.next} через ${r.toNext}` : 'Максимальный ранг достигнут';
+  const r = computeRank();
+  document.getElementById('rankLetter').textContent = r.emoji;
+  document.getElementById('rankLevelText').textContent = r.rank;
+  document.getElementById('rankNextText').textContent = r.isMax
+    ? 'Пик формы — дальше только удерживать'
+    : `Далее: ${r.nextEmoji} ${r.next} · ещё ${r.toNext} ${ruPlural(r.toNext, ['очко','очка','очков'])} формы`;
   document.getElementById('rankFill').style.width = r.pct + '%';
+  const compEl = document.getElementById('rankComposite');
+  if (compEl) compEl.textContent = `Очки формы: ${r.composite} / 100${bodyPhotos.length ? '' : ' · оценка пока только по силовому прогрессу — добавь фото для полноты картины'}`;
 }
 
 function renderWeekDots(){
@@ -2053,6 +2124,33 @@ const GEMINI_FOOD_PROMPT = 'Ты — ассистент по подсчёту к
 // middle. Every failure mode (missing key, offline, bad response shape) is caught and tagged
 // with a `code` so the caller can show a specific message and fall back to manual entry instead
 // of leaving the user stuck.
+function sleep(ms){ return new Promise(resolve => setTimeout(resolve, ms)); }
+
+// Gemini's free tier occasionally answers with "model overloaded" (503) or a rate limit (429) —
+// both are transient and usually clear within a couple seconds, so retry those a couple of times
+// with a short backoff before giving up. Anything else (bad key, malformed request, unknown
+// model, genuinely offline) is not retried — retrying won't fix those.
+async function fetchGeminiWithRetry(url, body, maxAttempts){
+  maxAttempts = maxAttempts || 3;
+  let lastNetworkErr;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++){
+    let res;
+    try{
+      res = await fetch(url, { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(body) });
+    }catch(e){
+      lastNetworkErr = Object.assign(new Error('NETWORK'), { code:'NETWORK' });
+      if (attempt < maxAttempts){ await sleep(800 * attempt); continue; }
+      throw lastNetworkErr;
+    }
+    if (res.ok) return res;
+    if ((res.status === 503 || res.status === 429) && attempt < maxAttempts){ await sleep(1000 * attempt); continue; }
+    let detail = '';
+    try{ detail = (await res.text()).slice(0, 180); }catch(e){}
+    const err = new Error(`HTTP ${res.status}: ${detail}`); err.code = 'API'; throw err;
+  }
+  throw lastNetworkErr;
+}
+
 async function analyzeFoodPhoto(base64Jpeg){
   const key = getGeminiKey();
   if (!key){ const err = new Error('NO_KEY'); err.code = 'NO_KEY'; throw err; }
@@ -2078,15 +2176,7 @@ async function analyzeFoodPhoto(base64Jpeg){
       },
     },
   };
-  let res;
-  try{
-    res = await fetch(url, { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(body) });
-  }catch(e){ const err = new Error('NETWORK'); err.code = 'NETWORK'; throw err; }
-  if (!res.ok){
-    let detail = '';
-    try{ detail = (await res.text()).slice(0, 180); }catch(e){}
-    const err = new Error(`HTTP ${res.status}: ${detail}`); err.code = 'API'; throw err;
-  }
+  const res = await fetchGeminiWithRetry(url, body);
   let data;
   try{ data = await res.json(); }catch(e){ const err = new Error('BAD_JSON'); err.code = 'PARSE'; throw err; }
   const text = data && data.candidates && data.candidates[0] && data.candidates[0].content &&
@@ -2128,15 +2218,7 @@ async function analyzeBodyPhoto(base64Current, base64Previous){
       },
     },
   };
-  let res;
-  try{
-    res = await fetch(url, { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(body) });
-  }catch(e){ const err = new Error('NETWORK'); err.code = 'NETWORK'; throw err; }
-  if (!res.ok){
-    let detail = '';
-    try{ detail = (await res.text()).slice(0, 180); }catch(e){}
-    const err = new Error(`HTTP ${res.status}: ${detail}`); err.code = 'API'; throw err;
-  }
+  const res = await fetchGeminiWithRetry(url, body);
   let data;
   try{ data = await res.json(); }catch(e){ const err = new Error('BAD_JSON'); err.code = 'PARSE'; throw err; }
   const candidate = data && data.candidates && data.candidates[0];
@@ -2328,10 +2410,11 @@ async function initApp(){
     loadBodyLog().catch(() => { bodyLog = []; }),
     loadMeta().catch(() => { meta = { n: 0 }; }),
     loadNutritionState().catch(() => { nutriDays = []; todayNutriEntries = []; }),
+    ensureBodyPhotosLoaded(), // rank badge needs this ready before the first render, not just on the Progress screen
   ]);
   try{
     // one-time backfill: someone upgrading from before the lifetime counter existed
-    // shouldn't see their rank reset to E just because history already has sessions on file
+    // shouldn't lose their session history total just because it wasn't tracked yet
     if (!meta.n && history.length){ meta.n = history.length; await saveMeta(); }
   }catch(e){}
 
