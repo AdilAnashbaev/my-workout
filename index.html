@@ -256,6 +256,11 @@
       <button class="btn ghost" id="nutritionNavBtn">🍽 Питание</button>
     </div>
 
+    <div class="panel" id="turnikPanel" style="margin-top:14px;">
+      <span class="label-tag">🚪 Турник у кабинета</span>
+      <div id="turnikBody"></div>
+    </div>
+
     <footer class="note">
       История тренировок сохраняется на этом устройстве после завершения тренировки.
       <span id="storageStatus"></span>
@@ -536,66 +541,127 @@
 /* ============================================================
    PROGRAM DATA
    ============================================================ */
+// Cut program (4 gym days + 2 home days), rolled out 2026-10-09. Gym days run as 3 straight
+// supersets (~30 min incl. warm-up); pair A gets a full warm-up set (50% x 10), pairs B/C get a
+// quick "primer" set instead (60% x 5, 30s rest — muscles are already warm by then). Every pair
+// rests 60s between its two exercises either way: A1 -> 60s -> A2 -> 60s -> A1 again.
+const WARMUP_COMMON = [
+  '30 с вращений руками вперёд-назад + 10 выкрутов с полотенцем или резинкой',
+  '10 глубоких приседаний со своим весом + 10 наклонов с прямой спиной',
+];
 const PROGRAM = {
-  A: { label:'День A', name:'Вертикальная тяга + жим, руки', tags:'Спина · Плечи · Бицепс · Трицепс · Пресс', blocks:[
-    { type:'pair', ssLabel:'Суперсет A — вертикальная тяга + вертикальный жим',
-      primary:{ name:'Тяга верхнего блока', sub:'Широкий/нейтральный хват, грудь вверх, тяга к верху груди', warmup:{reps:'12-15', weight:40, rest:60}, work:{count:2, reps:'8-10', weight:70} },
-      secondary:{ name:'Жим плеч в тренажёре', sub:'Подконтрольно, без жёсткого замка — антагонист тяге блока', warmup:{reps:'12-15', weight:20, rest:60}, work:{count:2, reps:'8-10', weight:45} },
-      transitionRest:25, roundRest:100 },
-    { type:'pair', ssLabel:'Суперсет B — бицепс + трицепс',
-      primary:{ name:'Подъём EZ-штанги на бицепс', sub:'Строго, без раскачки', warmup:{reps:'12-15', weight:20, rest:50}, work:{count:2, reps:'8-10', weight:35} },
-      secondary:{ name:'Разгибание рук на трицепс с канатом', sub:'Локти прижаты к корпусу, полное разгибание', warmup:{reps:'12-15', weight:15, rest:45}, work:{count:2, reps:'10-12', weight:30} },
-      transitionRest:20, roundRest:70 },
-    { type:'single', name:'Разведение рук в стороны (блок/тренажёр)', sub:'Средние дельты — обычные подходы, главный рычаг для ширины плеч',
-      warmup:null, work:{count:2, reps:'12-15', weight:8, rest:70} },
-    { type:'single', name:'Скручивания на блоке / Подъём коленей в висе', sub:'Пресс — подконтрольно, полное сокращение',
-      warmup:null, work:{count:2, reps:'12-15', weight:20, rest:50} },
+  A: { label:'День A', name:'Верх A (сила)', tags:'Спина · Плечи · Бицепс · Трицепс',
+    warmupChecklist: [...WARMUP_COMMON, '15 тяг верхнего блока с лёгким весом'],
+    blocks:[
+    { type:'pair', ssLabel:'Суперсет A — тяжёлая тяга + тяжёлый жим',
+      primary:{ name:'Тяга верхнего блока широким хватом', sub:'Широкий хват, грудь вверх, тяга к верху груди', warmup:{reps:'10', weight:37.5, rest:60}, work:{count:2, reps:'6-8', weight:75} },
+      secondary:{ name:'Жим в тренажёре на наклонной скамье', sub:'Антагонист тяге блока — нет данных, подбери вес с запасом ~2 повтора на верхней границе', warmup:{reps:'10', weight:17.5, rest:60}, work:{count:2, reps:'6-8', weight:35} },
+      transitionRest:60, roundRest:60 },
+    { type:'pair', ssLabel:'Суперсет B — тяга в тренажёре + жим над головой',
+      primary:{ name:'Тяга в рычажном тренажёре с упором в грудь', sub:'Упор в грудь, тяга к низу живота, без раскачки — 50 кг на сторону', warmup:{reps:'5', weight:30, rest:30}, work:{count:2, reps:'6-8 /сторону', weight:50} },
+      secondary:{ name:'Жим над головой в тренажёре', sub:'Антагонист тяге — плечи, нет данных, подбери вес с запасом', warmup:{reps:'5', weight:17.5, rest:30}, work:{count:2, reps:'6-8', weight:30} },
+      transitionRest:60, roundRest:60 },
+    { type:'pair', ssLabel:'Суперсет C — руки',
+      primary:{ name:'Сгибание с EZ-штангой', sub:'Строго, без раскачки', warmup:{reps:'5', weight:25, rest:30}, work:{count:2, reps:'6-8', weight:40} },
+      secondary:{ name:'Разгибание с канатом из-за головы', sub:'Локти у головы, полное разгибание — у потолка блока, работай ближе к его максимуму', warmup:{reps:'5', weight:15, rest:30}, work:{count:2, reps:'8-10', weight:25} },
+      transitionRest:60, roundRest:60 },
   ]},
-  B: { label:'День B', name:'Горизонтальная тяга + жим, руки', tags:'Спина · Грудь · Бицепс · Трицепс · Пресс', blocks:[
-    { type:'pair', ssLabel:'Суперсет A — горизонтальная тяга + горизонтальный жим',
-      primary:{ name:'Тяга в тренажёре с упором в грудь', sub:'Нейтральный хват, сведение лопаток, без раскачки корпуса', warmup:{reps:'12-15', weight:30, rest:60}, work:{count:2, reps:'8-10', weight:55} },
-      secondary:{ name:'Жим от груди в тренажёре', sub:'Безопасно в одиночку — антагонист тяге, ваш единственный слот на грудь на неделе', warmup:{reps:'12-15', weight:25, rest:60}, work:{count:2, reps:'8-10', weight:50} },
-      transitionRest:25, roundRest:100 },
-    { type:'pair', ssLabel:'Суперсет B — бицепс + трицепс',
-      primary:{ name:'Молотковые сгибания на блоке с канатом', sub:'Акцент на предплечья / плечевую мышцу', warmup:null, work:{count:2, reps:'10-12', weight:15} },
-      secondary:{ name:'Разгибание рук на трицепс над головой (блок)', sub:'Акцент на длинную головку', warmup:null, work:{count:2, reps:'10-12', weight:20} },
-      transitionRest:20, roundRest:70 },
-    { type:'single', name:'Тяга к лицу', sub:'Канатная рукоять, задние дельты / верх спины',
-      warmup:null, work:{count:2, reps:'12-15', weight:15, rest:70} },
-    { type:'single', name:'Планка / Скручивания на блоке с отягощением', sub:'Пресс — анти-разгибание',
-      warmup:null, work:{count:2, reps:'12-15', weight:15, rest:50} },
+  B: { label:'День B', name:'Низ A + спина, плечи, руки', tags:'Ноги · Спина · Средняя дельта · Руки',
+    warmupChecklist: [...WARMUP_COMMON, '10 выпадов на каждую ногу'],
+    blocks:[
+    { type:'pair', ssLabel:'Суперсет A — жим ногами + сгибание ног',
+      primary:{ name:'Жим ногами', sub:'Квадрицепсы — акцент дня, механический упор, нет данных, подбери вес с запасом', warmup:{reps:'10', weight:45, rest:60}, work:{count:2, reps:'8-10', weight:90} },
+      secondary:{ name:'Сгибание ног лёжа', sub:'Задняя поверхность бедра, баланс к жиму ногами — нет данных, подбери вес с запасом', warmup:{reps:'10', weight:12.5, rest:60}, work:{count:2, reps:'10-12', weight:25} },
+      transitionRest:60, roundRest:60 },
+    { type:'pair', ssLabel:'Суперсет B — широчайшие + средняя дельта',
+      primary:{ name:'Тяга верхнего блока нейтральным хватом', sub:'Широчайшие — другой хват по сравнению с понедельником', warmup:{reps:'5', weight:40, rest:30}, work:{count:2, reps:'10-12', weight:65} },
+      secondary:{ name:'Махи в стороны на нижних блоках кроссовера', sub:'Средняя дельта, трос снизу вверх по дуге, без раскачки корпуса — диапазон 5-7,5 кг', warmup:{reps:'5', weight:3, rest:30}, work:{count:2, reps:'12-15 /сторону', weight:5} },
+      transitionRest:60, roundRest:60 },
+    { type:'pair', ssLabel:'Суперсет C — руки',
+      primary:{ name:'Молотки с гантелями', sub:'Предплечья / плечевая мышца, нейтральный хват', warmup:{reps:'5', weight:8, rest:30}, work:{count:2, reps:'10-12', weight:14} },
+      secondary:{ name:'Разгибание на блоке одной рукой (D-рукоять)', sub:'Трицепс, одна рука, локоть прижат к корпусу', warmup:{reps:'5', weight:7.5, rest:30}, work:{count:2, reps:'10-12', weight:12.5} },
+      transitionRest:60, roundRest:60 },
   ]},
-  C: { label:'День C', name:'Вертикальная тяга + жим, руки', tags:'Спина · Плечи · Бицепс · Трицепс · Пресс', blocks:[
-    { type:'pair', ssLabel:'Суперсет A — вертикальная тяга + вертикальный жим',
-      primary:{ name:'Подтягивания с ассистом / Тяга блока узким хватом', sub:'Другой угол по сравнению с широкой тягой блока в День A', warmup:{reps:'12-15', weight:30, rest:60}, work:{count:2, reps:'8-10', weight:60} },
-      secondary:{ name:'Жим гантелей сидя / Жим в Смите', sub:'Гантели: можно уронить в сторону при отказе — антагонист подтягиваниям/тяге блока', warmup:{reps:'12-15', weight:14, rest:60}, work:{count:2, reps:'8-10', weight:24} },
-      transitionRest:25, roundRest:100 },
-    { type:'pair', ssLabel:'Суперсет B — бицепс + трицепс',
-      primary:{ name:'Сгибания на бицепс на наклонной скамье (гантели/блок)', sub:'Растяжение длинной головки бицепса, другой стимул по сравнению с EZ-штангой', warmup:{reps:'12-15', weight:8, rest:50}, work:{count:2, reps:'8-10', weight:14} },
-      secondary:{ name:'Тренажёр для отжиманий на брусьях / Разгибание блока узким хватом', sub:'Самоограничивающее упражнение, безопасно выполнять до отказа в одиночку', warmup:{reps:'12-15', weight:20, rest:45}, work:{count:2, reps:'10-12', weight:40} },
-      transitionRest:20, roundRest:75 },
-    { type:'single', name:'Разведение рук в стороны на блоке', sub:'Другой угол по сравнению с тренажёром в День A',
-      warmup:null, work:{count:2, reps:'12-15', weight:8, rest:70} },
-    { type:'single', name:'Подъём коленей в висе / Дровосек на блоке', sub:'Косые мышцы живота',
-      warmup:null, work:{count:2, reps:'12-15', weight:0, rest:50} },
+  C: { label:'День C', name:'Верх B (объём)', tags:'Спина · Грудь · Плечи · Руки',
+    warmupChecklist: [...WARMUP_COMMON, '15 тяг верхнего блока с лёгким весом'],
+    blocks:[
+    { type:'pair', ssLabel:'Суперсет A — узкая тяга + жим гантелей',
+      primary:{ name:'Тяга верхнего блока узким обратным хватом', sub:'Узкий обратный хват, третий угол недели после широкого (Пн) и нейтрального (Вт)', warmup:{reps:'10', weight:40, rest:60}, work:{count:2, reps:'8-10', weight:65} },
+      secondary:{ name:'Жим гантелей на наклонной скамье', sub:'Антагонист тяге — нет данных, подбери вес с запасом ~2 повтора', warmup:{reps:'10', weight:8, rest:60}, work:{count:2, reps:'10-12', weight:16} },
+      transitionRest:60, roundRest:60 },
+    { type:'pair', ssLabel:'Суперсет B — тяга гантели + жим гантелей',
+      primary:{ name:'Тяга гантели одной рукой с упором', sub:'Упор на скамью, односторонне — безопасно в одиночку', warmup:{reps:'5', weight:17.5, rest:30}, work:{count:2, reps:'10-12 /сторону', weight:30} },
+      secondary:{ name:'Жим гантелей сидя', sub:'Антагонист тяге — плечи, нет данных, подбери вес с запасом', warmup:{reps:'5', weight:8, rest:30}, work:{count:2, reps:'10-12', weight:14} },
+      transitionRest:60, roundRest:60 },
+    { type:'pair', ssLabel:'Суперсет C — руки',
+      primary:{ name:'Сгибание в тренажёре Скотта', sub:'Бицепс, строгая амплитуда в упоре — вес зависит от тренажёра', warmup:{reps:'5', weight:17.5, rest:30}, work:{count:2, reps:'10-12', weight:30} },
+      secondary:{ name:'Разгибание на блоке с канатом вниз', sub:'Трицепс, локти прижаты', warmup:{reps:'5', weight:15, rest:30}, work:{count:2, reps:'12-15', weight:25} },
+      transitionRest:60, roundRest:60 },
   ]},
-  D: { label:'День D', name:'Горизонтальная тяга + ноги, руки', tags:'Спина · Ноги · Бицепс · Задние дельты', blocks:[
-    { type:'pair', ssLabel:'Суперсет A — в паре для экономии времени (без пересечения мышц)',
-      primary:{ name:'Тяга гантели одной рукой', sub:'С упором на скамью, односторонне — безопасно в одиночку', warmup:{reps:'12-15', weight:12, rest:50}, work:{count:2, reps:'8-10 /сторона', weight:26} },
-      secondary:{ name:'Жим ногами', sub:'Механический упор, страховщик не нужен — ваш единственный слот на ноги на неделе', warmup:{reps:'12-15', weight:60, rest:60}, work:{count:2, reps:'10-12', weight:140} },
-      transitionRest:25, roundRest:100 },
-    { type:'pair', ssLabel:'Суперсет B — в паре для экономии времени (без пересечения мышц)',
-      primary:{ name:'Сгибания обратным хватом', sub:'Акцент на предплечья / плечелучевую мышцу', warmup:null, work:{count:2, reps:'10-12', weight:20} },
-      secondary:{ name:'Сгибание ног сидя/лёжа', sub:'Балансирует жим ногами, где доминируют квадрицепсы', warmup:null, work:{count:2, reps:'10-12', weight:35} },
-      transitionRest:20, roundRest:80 },
-    { type:'single', name:'Обратная бабочка / Разведение на задние дельты', sub:'Задние дельты, другой инструмент по сравнению с тягой к лицу в День B',
-      warmup:null, work:{count:2, reps:'12-15', weight:18, rest:70} },
-    { type:'single', name:'Подъём на носки стоя', sub:'Быстрое дополнение для баланса нижней части тела',
-      warmup:null, work:{count:2, reps:'12-15', weight:60, rest:45} },
+  D: { label:'День D', name:'Низ B + спина, плечи, руки', tags:'Ноги · Спина · Руки',
+    warmupChecklist: [...WARMUP_COMMON, '10 выпадов на каждую ногу'],
+    blocks:[
+    { type:'pair', ssLabel:'Суперсет A — присед + сгибание ног',
+      primary:{ name:'Гакк-присед или присед в Смите', sub:'Акцент на заднюю цепь и ягодицы — нет данных, подбери вес с запасом', warmup:{reps:'10', weight:30, rest:60}, work:{count:2, reps:'8-10', weight:60} },
+      secondary:{ name:'Сгибание ног сидя', sub:'Задняя поверхность бедра — нет данных, подбери вес с запасом', warmup:{reps:'10', weight:12.5, rest:60}, work:{count:2, reps:'10-12', weight:25} },
+      transitionRest:60, roundRest:60 },
+    { type:'pair', ssLabel:'Суперсет B — RDL + пуловер',
+      primary:{ name:'Румынская тяга с гантелями', sub:'Задняя цепь, гантели вдоль ног, спина прямая — нет данных, подбери вес с запасом', warmup:{reps:'5', weight:12, rest:30}, work:{count:2, reps:'8-10', weight:20} },
+      secondary:{ name:'Пуловер на верхнем блоке прямыми руками', sub:'Широчайшие на растяжение — изоляция для ширины спины', warmup:{reps:'5', weight:12.5, rest:30}, work:{count:2, reps:'12-15', weight:22.5} },
+      transitionRest:60, roundRest:60 },
+    { type:'pair', ssLabel:'Суперсет C — руки',
+      primary:{ name:'Сгибание с гантелями сидя на наклонной скамье', sub:'Бицепс на растяжение, рука свободно свисает', warmup:{reps:'5', weight:6, rest:30}, work:{count:2, reps:'10-12', weight:10} },
+      secondary:{ name:'Французский жим с EZ-штангой лёжа', sub:'Трицепс, локти неподвижны', warmup:{reps:'5', weight:15, rest:30}, work:{count:2, reps:'10-12', weight:25} },
+      transitionRest:60, roundRest:60 },
+  ]},
+  // Home days: no gym warm-up needed (light weight, high reps). Same session both days —
+  // medial/rear delts and anti-extension core that didn't fit in the morning gym window.
+  E: { label:'Среда', name:'🏠 Дельты, пресс и предплечья (дома)', tags:'Средняя дельта · Задняя дельта · Пресс · Предплечья', blocks:[
+    { type:'pair', ssLabel:'Суперсет A — средняя + задняя дельта',
+      primary:{ name:'Махи в стороны стоя', sub:'Средняя дельта, без раскачки корпуса', warmup:null, work:{count:2, reps:'12-20', weight:8, increment:1} },
+      secondary:{ name:'Обратные разведения в наклоне', sub:'Наклон корпуса, локти чуть согнуты — задняя дельта', warmup:null, work:{count:2, reps:'12-20', weight:6, increment:1} },
+      transitionRest:45, roundRest:45 },
+    { type:'pair', ssLabel:'Суперсет B — средняя дельта + пресс',
+      primary:{ name:'Махи в стороны сидя', sub:'Сидя — убирает инерцию корпуса, чище средняя дельта. Дошёл до 10 кг × 20 — делай медленнее: 3 с опускание, 1 с пауза вверху', warmup:null, work:{count:2, reps:'12-20', weight:6.5, increment:1} },
+      secondary:{ name:'Мёртвый жук', sub:'Поясница прижата к полу, противоположная рука/нога — медленно', warmup:null, work:{count:2, reps:'8-10 /сторону', weight:0} },
+      transitionRest:45, roundRest:45 },
+    { type:'pair', ssLabel:'Суперсет C — предплечья',
+      primary:{ name:'Сгибание кистей сидя', sub:'Предплечье лежит на бедре, работает только кисть', warmup:null, work:{count:2, reps:'15-20', weight:10, increment:1} },
+      secondary:{ name:'Обратные сгибания рук хватом сверху', sub:'Хват сверху, предплечья/плечелучевая мышца', warmup:null, work:{count:2, reps:'12-15', weight:6.5, increment:1} },
+      transitionRest:45, roundRest:45 },
+  ]},
+  F: { label:'Суббота', name:'🏠 Дельты, пресс и предплечья (дома)', tags:'Средняя дельта · Задняя дельта · Пресс · Предплечья', blocks:[
+    { type:'pair', ssLabel:'Суперсет A — средняя + задняя дельта',
+      primary:{ name:'Махи в стороны стоя', sub:'Средняя дельта, без раскачки корпуса', warmup:null, work:{count:2, reps:'12-20', weight:8, increment:1} },
+      secondary:{ name:'Обратные разведения в наклоне', sub:'Наклон корпуса, локти чуть согнуты — задняя дельта', warmup:null, work:{count:2, reps:'12-20', weight:6, increment:1} },
+      transitionRest:45, roundRest:45 },
+    { type:'pair', ssLabel:'Суперсет B — средняя дельта + пресс',
+      primary:{ name:'Махи в стороны сидя', sub:'Сидя — убирает инерцию корпуса, чище средняя дельта. Дошёл до 10 кг × 20 — делай медленнее: 3 с опускание, 1 с пауза вверху', warmup:null, work:{count:2, reps:'12-20', weight:6.5, increment:1} },
+      secondary:{ name:'Мёртвый жук', sub:'Поясница прижата к полу, противоположная рука/нога — медленно', warmup:null, work:{count:2, reps:'8-10 /сторону', weight:0} },
+      transitionRest:45, roundRest:45 },
+    { type:'pair', ssLabel:'Суперсет C — предплечья',
+      primary:{ name:'Сгибание кистей сидя', sub:'Предплечье лежит на бедре, работает только кисть', warmup:null, work:{count:2, reps:'15-20', weight:10, increment:1} },
+      secondary:{ name:'Обратные сгибания рук хватом сверху', sub:'Хват сверху, предплечья/плечелучевая мышца', warmup:null, work:{count:2, reps:'12-15', weight:6.5, increment:1} },
+      transitionRest:45, roundRest:45 },
   ]},
 };
 
-const DAY_ORDER = ['A','B','C','D'];
+// Chronological weekly order (Mon A, Tue B, Wed home, Thu C, Fri D, Sat home) — rotation
+// suggestion and the cross-day exercise lookup both walk this list, so Wed/Sat naturally
+// slot into the Mon->Sat sequence instead of needing separate handling.
+const DAY_ORDER = ['A','B','E','C','D','F'];
+
+// Every 7th week is an automatic deload: same exercises, 1 working set instead of 2. Anchored
+// to the Monday this cut program started (2026-10-09 is a Friday, so week 1 starts 2026-10-05) —
+// a fixed date rather than per-user "first app open" so the cycle is predictable and verifiable.
+const PROGRAM_EPOCH = new Date(2026, 9, 5).getTime();
+function currentProgramWeek(){
+  const days = Math.floor((Date.now() - PROGRAM_EPOCH) / 86400000);
+  return Math.floor(days / 7) + 1; // 1-indexed
+}
+function isDeloadWeek(){
+  return currentProgramWeek() % 7 === 0;
+}
 
 /* ============================================================
    STATE
@@ -635,6 +701,7 @@ const HISTORY_KEY = 'ariseHistory';
 const PROGRESS_KEY = 'ariseProgress';
 const BODYLOG_KEY = 'ariseBodyLog';
 const META_KEY = 'ariseMeta';
+const TURNIK_KEY = 'ariseTurnik';
 // Verified worst case (every single record carrying a full-length note, Cyrillic chars are
 // 2 bytes each in UTF-8): 30 records × 30-char note ≈ 3.8KB, comfortably under the 4096-byte
 // limit. NOTE_MAX is kept lower than the old English-only value specifically because Cyrillic
@@ -669,6 +736,11 @@ let memoryStore = {};
 // lifetime counter that never gets capped/rotated — rank/level must never freeze once history
 // scrolls old sessions out of its display window
 let meta = { n: 0 };
+// Office door-bar pull-up protocol — entirely separate from gym/home sessions: logged
+// throughout the day, several times a day, Mon-Thu only. maxReps is the last known true max
+// (from a biweekly all-out test); lastTestTs is when that test happened; log is a flat list of
+// completed sets so "today" and history can both be read back out of it.
+let turnik = { maxReps: null, lastTestTs: 0, log: [] };
 
 function localGet(key){
   try{ storageMode = 'local'; return localStorage.getItem(key); }
@@ -735,6 +807,19 @@ async function loadMeta(){
 }
 async function saveMeta(){
   await storageSet(META_KEY, JSON.stringify(meta));
+}
+
+const TURNIK_LOG_CAP = 400; // several sets/day x ~4 months — plenty for the "today" and biweekly-test reads this feature does
+async function loadTurnik(){
+  const raw = await storageGet(TURNIK_KEY);
+  try{ turnik = raw ? JSON.parse(raw) : { maxReps: null, lastTestTs: 0, log: [] }; }
+  catch(e){ turnik = { maxReps: null, lastTestTs: 0, log: [] }; }
+  if (!Array.isArray(turnik.log)) turnik.log = [];
+  return turnik;
+}
+async function saveTurnik(){
+  if (turnik.log.length > TURNIK_LOG_CAP) turnik.log = turnik.log.slice(turnik.log.length - TURNIK_LOG_CAP);
+  await storageSet(TURNIK_KEY, JSON.stringify(turnik));
 }
 
 async function loadProgress(){
@@ -1092,19 +1177,26 @@ function resolvedWeights(name, def){
 function buildSteps(dayKey){
   const day = PROGRAM[dayKey];
   const out = [];
+  const deload = isDeloadWeek(); // every 7th week: same exercises, 1 working set instead of 2
+  if (day.warmupChecklist){
+    out.push({ kind:'intro', ex:'Разминка', sub:'3 минуты перед первой парой', label:'Разминка',
+      checklist:day.warmupChecklist, rest:0, group:null, blockIdx:-1 });
+  }
   day.blocks.forEach((block, bIdx) => {
     if (block.type === 'single'){
       const rw = resolvedWeights(block.name, block);
+      const count = deload ? 1 : block.work.count;
       if (block.warmup){
         out.push({ ex:block.name, sub:block.sub, label:'Разминка', kind:'warmup', reps:block.warmup.reps, weight:rw.warmupWeight, rest:block.warmup.rest, group:null, blockIdx:bIdx });
       }
-      for (let i=0; i<block.work.count; i++){
+      for (let i=0; i<count; i++){
         out.push({ ex:block.name, sub:block.sub, label:`Подход ${i+1}`, kind:'work', reps:block.work.reps, weight:rw.workTarget, adjusted:rw.adjusted,
-          rest: i < block.work.count-1 ? block.work.rest : block.work.rest, group:null, blockIdx:bIdx, lastOfBlock:i===block.work.count-1 });
+          rest: i < count-1 ? block.work.rest : block.work.rest, group:null, blockIdx:bIdx, lastOfBlock:i===count-1 });
       }
     } else if (block.type === 'pair'){
       const p = block.primary, s = block.secondary;
       const rwP = resolvedWeights(p.name, p), rwS = resolvedWeights(s.name, s);
+      const count = deload ? 1 : p.work.count;
       // warm up each of the pair's two movements once, back to back
       if (p.warmup){
         out.push({ ex:p.name, sub:p.sub, label:'Разминка', kind:'warmup', reps:p.warmup.reps, weight:rwP.warmupWeight,
@@ -1115,10 +1207,10 @@ function buildSteps(dayKey){
           rest: block.roundRest, group:'pair', pairPartner:p.name, blockIdx:bIdx, ssLabel:block.ssLabel });
       }
       // then alternate working sets between the two
-      for (let i=0; i<p.work.count; i++){
+      for (let i=0; i<count; i++){
         out.push({ ex:p.name, sub:p.sub, label:`Подход ${i+1}`, kind:'work', reps:p.work.reps, weight:rwP.workTarget, adjusted:rwP.adjusted,
           rest: block.transitionRest, group:'pair', pairPartner:s.name, blockIdx:bIdx, ssLabel:block.ssLabel });
-        const isLastRound = i === p.work.count-1;
+        const isLastRound = i === count-1;
         out.push({ ex:s.name, sub:s.sub, label:`Подход ${i+1}`, kind:'work', reps:s.work.reps, weight:rwS.workTarget, adjusted:rwS.adjusted,
           rest: block.roundRest, group:'pair', pairPartner:p.name, blockIdx:bIdx, lastOfBlock:isLastRound, ssLabel:block.ssLabel });
       }
@@ -1129,10 +1221,11 @@ function buildSteps(dayKey){
   return out;
 }
 
-// After a finished session, update each exercise's progression state from its logged
-// WORKING sets (warm-ups don't count). Rule: both working sets at/above the top of the
-// program's rep range, two sessions running → bump the weight. Any working set below the
-// bottom of the range → hold (reset the streak, never auto-decrease — matches the stated rule).
+// After a finished session, update each exercise's progression state from its logged WORKING
+// sets (warm-ups don't count). Double progression, per the cut program: both working sets at/above
+// the top of the rep range → bump the weight NEXT session (2.5-5kg, or the exercise's own smaller
+// step — see `increment` on light/adjustable-dumbbell moves). Any working set below the bottom of
+// the range → hold (never auto-decrease).
 function updateProgressFromSession(sessionLog){
   const byEx = {};
   sessionLog.forEach(s => {
@@ -1151,8 +1244,8 @@ function updateProgressFromSession(sessionLog){
       // logged a different weight than what was suggested — trust what actually happened, reset the streak
       p.w = usedWeight; p.st = 0;
     } else if (logs.every(s => s.reps >= hi)){
-      p.st += 1;
-      if (p.st >= 2){ p.w = p.w + defaultIncrement(def.weight); p.st = 0; }
+      p.w = p.w + (def.increment || defaultIncrement(def.weight));
+      p.st = 0;
     } else if (logs.some(s => s.reps < lo)){
       p.st = 0; // hold — don't decrease, per the stated rule
     } else {
@@ -1169,14 +1262,16 @@ function updateProgressFromSession(sessionLog){
    ============================================================ */
 function calendarSuggestedDay(){
   const dow = new Date().getDay(); // 0 Sun ... 6 Sat
-  if (dow === 1) return 'A';
-  if (dow === 2) return 'B';
-  if (dow === 4) return 'C';
-  if (dow === 5) return 'D';
-  return null;
+  if (dow === 1) return 'A'; // Пн — Верх A
+  if (dow === 2) return 'B'; // Вт — Низ A
+  if (dow === 3) return 'E'; // Ср — дома
+  if (dow === 4) return 'C'; // Чт — Верх B
+  if (dow === 5) return 'D'; // Пт — Низ B
+  if (dow === 6) return 'F'; // Сб — дома
+  return null; // Sunday — rest day
 }
 
-// After a finished session, suggest the NEXT day in the A→B→C→D rotation —
+// After a finished session, suggest the NEXT day in the Mon->Sat rotation —
 // this is what makes "I finished Day A" turn into "it suggests Day B" next time.
 function rotationSuggestedDay(){
   if (!history.length) return null;
@@ -1188,6 +1283,49 @@ function rotationSuggestedDay(){
 
 function suggestedDay(){
   return rotationSuggestedDay() || calendarSuggestedDay();
+}
+
+/* ============================================================
+   TURNIK (office door-bar pull-ups) — Mon-Thu, several sets a day,
+   entirely separate from the gym/home session flow.
+   ============================================================ */
+const TURNIK_DAILY_SETS = '4-5';
+function turnikIsRestDay(d){
+  const dow = (d || new Date()).getDay(); // 0 Sun ... 6 Sat — Fri/Sat/Sun rest the back
+  return dow === 5 || dow === 6 || dow === 0;
+}
+// Half of the last known true max, per the program ("максимум 6 -> по 3"); below 4 reps the
+// program switches to negatives instead of counting reps.
+function turnikTarget(){
+  if (turnik.maxReps == null) return null;
+  if (turnik.maxReps < 4) return { mode:'negative', reps:3 };
+  return { mode:'reps', reps: Math.max(1, Math.round(turnik.maxReps / 2)) };
+}
+// Max-rep re-test: every 2 weeks, on a Wednesday.
+function turnikTestDue(d){
+  const day = d || new Date();
+  if (day.getDay() !== 3) return false;
+  if (!turnik.lastTestTs) return true;
+  return (day.getTime() - turnik.lastTestTs) >= 14 * 86400000;
+}
+function turnikTodayCount(){
+  const todayKey = dayKeyOf(Date.now());
+  return turnik.log.filter(e => dayKeyOf(e.ts) === todayKey).length;
+}
+function turnikMinutesSinceLastSet(){
+  if (!turnik.log.length) return Infinity;
+  return (Date.now() - turnik.log[turnik.log.length - 1].ts) / 60000;
+}
+async function turnikLogSet(){
+  const t = turnikTarget();
+  if (!t) return;
+  turnik.log.push({ ts: Date.now(), reps: t.reps, mode: t.mode });
+  await saveTurnik();
+}
+async function turnikRecordMax(n){
+  turnik.maxReps = n;
+  turnik.lastTestTs = Date.now();
+  await saveTurnik();
 }
 
 function renderDayGrid(){
@@ -1230,6 +1368,85 @@ function renderHistoryPanel(){
   `;
 }
 
+let turnikTestSkippedToday = false; // session-only: "обычный режим" dismisses the biweekly test prompt until next reload
+
+function renderTurnikCard(){
+  const body = document.getElementById('turnikBody');
+  if (!body) return;
+
+  if (turnikIsRestDay()){
+    body.innerHTML = `<div style="font-size:0.8rem;color:var(--text-dim);">Сегодня без турника — спина отдыхает (турник только Пн–Чт).</div>`;
+    return;
+  }
+
+  if (turnik.maxReps == null){
+    body.innerHTML = `
+      <div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:10px;">
+        Сколько чистых подтягиваний ты сделаешь за один подход, без отказа? Это станет точкой отсчёта — дальше подходы в течение дня будут по половине этого числа.
+      </div>
+      <div style="display:flex;gap:10px;">
+        <input type="number" id="turnikMaxInput" placeholder="повторений" inputmode="numeric" min="0"
+          style="flex:1;min-width:0;background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:10px;text-align:center;font-size:0.95rem;">
+        <button class="btn primary" id="turnikSaveMaxBtn" style="flex:1;">Сохранить</button>
+      </div>`;
+    document.getElementById('turnikSaveMaxBtn').onclick = async () => {
+      const n = parseInt(document.getElementById('turnikMaxInput').value, 10);
+      if (!Number.isFinite(n) || n < 0) return;
+      await turnikRecordMax(n);
+      renderTurnikCard();
+    };
+    return;
+  }
+
+  if (turnikTestDue() && !turnikTestSkippedToday){
+    body.innerHTML = `
+      <div class="insight-box" style="margin-bottom:10px;">
+        Среда — проверка максимума. Один подход на максимум чистых повторений, затем впиши результат — это пересчитает твою рабочую половину.
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:8px;">
+        <input type="number" id="turnikMaxInput" placeholder="повторений" inputmode="numeric" min="0"
+          style="flex:1;min-width:0;background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:10px;text-align:center;font-size:0.95rem;">
+        <button class="btn primary" id="turnikSaveMaxBtn" style="flex:1;">Записать максимум</button>
+      </div>
+      <a href="#" id="turnikSkipTestLink" style="font-size:0.72rem;color:var(--text-dim);text-decoration:underline;">Пропустить, обычный режим сегодня</a>`;
+    document.getElementById('turnikSaveMaxBtn').onclick = async () => {
+      const n = parseInt(document.getElementById('turnikMaxInput').value, 10);
+      if (!Number.isFinite(n) || n < 0) return;
+      await turnikRecordMax(n);
+      renderTurnikCard();
+    };
+    document.getElementById('turnikSkipTestLink').onclick = (e) => {
+      e.preventDefault();
+      turnikTestSkippedToday = true;
+      renderTurnikCard();
+    };
+    return;
+  }
+
+  const t = turnikTarget();
+  const todayCount = turnikTodayCount();
+  const goalText = t.mode === 'negative'
+    ? `Негативы, 3 раза — запрыгнул наверх, опускайся 4-5 с`
+    : `${t.reps} ${ruPlural(t.reps, ['повторение','повторения','повторений'])} (половина от максимума ${turnik.maxReps})`;
+  const mins = turnikMinutesSinceLastSet();
+  const tooSoon = mins < 60;
+  body.innerHTML = `
+    <div class="macro-row"><span>Цель подхода</span><b>${goalText}</b></div>
+    <div class="macro-row"><span>Сегодня</span><b>${todayCount} / ${TURNIK_DAILY_SETS} подходов</b></div>
+    ${tooSoon ? `<div style="font-size:0.72rem;color:var(--gold);margin-bottom:8px;">Прошло меньше часа с прошлого подхода — можно подождать.</div>` : ''}
+    <button class="btn primary" id="turnikLogBtn" style="width:100%;margin-bottom:6px;">✓ Записать подход</button>
+    <a href="#" id="turnikRetestLink" style="font-size:0.72rem;color:var(--text-dim);text-decoration:underline;">Обновить максимум вручную</a>`;
+  document.getElementById('turnikLogBtn').onclick = async () => {
+    await turnikLogSet();
+    renderTurnikCard();
+  };
+  document.getElementById('turnikRetestLink').onclick = (e) => {
+    e.preventDefault();
+    turnik.maxReps = null;
+    renderTurnikCard();
+  };
+}
+
 function renderRankPill(){
   const r = computeRank();
   const pill = document.getElementById('playerTag');
@@ -1246,7 +1463,7 @@ function selectDay(key, btnEl){
   const day = PROGRAM[key];
   const panel = document.getElementById('previewPanel');
   panel.style.display = 'block';
-  document.getElementById('previewLabel').textContent = `${day.label} — ${day.name}`;
+  document.getElementById('previewLabel').textContent = `${day.label} — ${day.name}` + (isDeloadWeek() ? ' · Разгрузочная неделя (1 подход)' : '');
   document.getElementById('previewList').innerHTML = day.blocks.map(b => {
     if (b.type === 'single') return `• ${b.name}`;
     return `• ${b.primary.name} + ${b.secondary.name} <span style="color:var(--purple)">(суперсет)</span>`;
@@ -1260,7 +1477,7 @@ document.getElementById('startBtn').onclick = () => {
   sessionLog = [];
   sessionStartTime = Date.now();
   document.getElementById('sessionNoteInput').value = '';
-  document.getElementById('sessionDayLabel').textContent = `◆ ${PROGRAM[selectedDay].label.toUpperCase()}`;
+  document.getElementById('sessionDayLabel').textContent = `◆ ${PROGRAM[selectedDay].label.toUpperCase()}` + (isDeloadWeek() ? ' · РАЗГРУЗКА' : '');
   showScreen('screen-session');
   renderStep();
 };
@@ -1285,6 +1502,26 @@ function renderStep(){
   document.getElementById('progressText').textContent = `Шаг ${currentStepIdx+1} / ${steps.length}`;
   document.getElementById('progressPct').textContent = pct + '%';
   document.getElementById('progressFill').style.width = pct + '%';
+
+  const targetRow = document.querySelector('.target-row');
+  const inputRow = document.querySelector('.input-row');
+
+  // the 3-minute general warm-up is a checklist, not a logged set — no weight/reps, no superset
+  // tag, no set pills, just a "done, let's go" button straight into pair A's own warm-up set
+  if (step.kind === 'intro'){
+    document.getElementById('supersetTagWrap').innerHTML = '';
+    document.getElementById('exName').textContent = step.ex;
+    document.getElementById('exSub').innerHTML = (step.checklist || []).map(line => '• ' + line).join('<br>');
+    document.getElementById('setPills').innerHTML = '';
+    if (targetRow) targetRow.style.display = 'none';
+    if (inputRow) inputRow.style.display = 'none';
+    const next = steps[currentStepIdx+1];
+    document.getElementById('nextPreview').textContent = next ? `Далее: ${next.ex} — ${next.label}` : '';
+    document.getElementById('logSetBtn').textContent = 'Готово, начинаем →';
+    return;
+  }
+  if (targetRow) targetRow.style.display = '';
+  if (inputRow) inputRow.style.display = '';
 
   // superset tag
   const tagWrap = document.getElementById('supersetTagWrap');
@@ -1341,6 +1578,12 @@ function stepInput(id, delta){
 
 document.getElementById('logSetBtn').onclick = () => {
   const step = steps[currentStepIdx];
+  if (step.kind === 'intro'){
+    // checklist step — nothing to log, no rest, straight into pair A's own warm-up set
+    currentStepIdx++;
+    renderStep();
+    return;
+  }
   const loggedWeight = parseFloat(document.getElementById('weightInput').value) || 0;
   const loggedReps = parseInt(document.getElementById('repsInput').value) || 0;
   sessionLog.push({ ex: step.ex, label: step.label, kind: step.kind, weight: loggedWeight, reps: loggedReps });
@@ -1510,6 +1753,7 @@ document.getElementById('returnBtn').onclick = async () => {
   renderDayGrid();       // re-render so the newly-completed day updates the suggestion
   renderHistoryPanel();
   renderRankPill();
+  renderTurnikCard();
   showScreen('screen-home');
 };
 
@@ -1520,6 +1764,7 @@ document.getElementById('clearHistoryLink').onclick = async (e) => {
   renderDayGrid();
   renderHistoryPanel();
   renderRankPill();
+  renderTurnikCard();
 };
 
 /* ============================================================
@@ -2439,6 +2684,7 @@ async function initApp(){
     loadBodyLog().catch(() => { bodyLog = []; }),
     loadMeta().catch(() => { meta = { n: 0 }; }),
     loadNutritionState().catch(() => { nutriDays = []; todayNutriEntries = []; }),
+    loadTurnik().catch(() => { turnik = { maxReps: null, lastTestTs: 0, log: [] }; }),
     ensureBodyPhotosLoaded(), // rank badge needs this ready before the first render, not just on the Progress screen
   ]);
   try{
@@ -2451,6 +2697,7 @@ async function initApp(){
   renderHistoryPanel();
   renderRankPill();
   renderNutritionTeaser();
+  renderTurnikCard();
 
   const statusEl = document.getElementById('storageStatus');
   if (statusEl){
